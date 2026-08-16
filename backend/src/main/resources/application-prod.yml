@@ -1,0 +1,41 @@
+# Production overrides, activated with SPRING_PROFILES_ACTIVE=prod (set by docker-compose.prod.yml).
+# Values here only *override* application.yml - anything not repeated keeps its base/env-var value.
+spring:
+  datasource:
+    hikari:
+      # Sized for ~4,000 registered users: real concurrency is a small fraction of that, and
+      # Postgres's own default max_connections is 100, so this leaves headroom for the DB itself
+      # plus any admin tooling (psql, pgAdmin, backup jobs) connecting alongside the app.
+      maximum-pool-size: 20
+      minimum-idle: 5
+  jpa:
+    properties:
+      hibernate:
+        generate_statistics: false
+
+server:
+  # The app's own GlobalExceptionHandler already returns sanitized JSON for every exception it
+  # catches (which is effectively all of them) - this just closes the same door for whatever
+  # reaches Spring Boot's own default error page instead (e.g. a request that never reaches a
+  # controller), so no raw exception text is ever echoed back to a client in production.
+  error:
+    include-message: never
+    include-binding-errors: never
+    include-stacktrace: never
+    include-exception: false
+  forward-headers-strategy: native
+
+logging:
+  level:
+    root: INFO
+    org.hibernate.SQL: WARN
+    com.societyportal.backend: INFO
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: never

@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: sdp-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: society_portal
+      POSTGRES_USER: society_admin
+      POSTGRES_PASSWORD: society_admin
+    ports:
+      - "5432:5432"
+    volumes:
+      - sdp_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U society_admin -d society_portal"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  sdp_pg_data:

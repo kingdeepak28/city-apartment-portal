@@ -1,0 +1,70 @@
+# Rendered from this template by the official nginx image's entrypoint (envsubst), using the
+# container's DOMAIN env var - see docker-compose.prod.yml. Only ${DOMAIN} is substituted;
+# nginx's own runtime variables ($host, $uri, ...) are untouched because they aren't set as
+# environment variables in this container.
+
+# Plain HTTP: serve the ACME (Let's Encrypt) challenge, redirect everything else to HTTPS.
+server {
+    listen 80;
+    server_name ${DOMAIN} www.${DOMAIN};
+
+    location /.well-known/acme-challenge/ {
+        root /var/www/certbot;
+    }
+
+    location / {
+        return 301 https://$host$request_uri;
+    }
+}
+
+# HTTPS: serve the built SPA and reverse-proxy /api to the backend.
+server {
+    listen 443 ssl;
+    http2 on;
+    server_name ${DOMAIN} www.${DOMAIN};
+
+    ssl_certificate     /etc/letsencrypt/live/${DOMAIN}/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/${DOMAIN}/privkey.pem;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers HIGH:!aNULL:!MD5;
+    ssl_session_cache shared:SSL:10m;
+    ssl_session_timeout 1d;
+
+    add_header Strict-Transport-Security "max-age=63072000; includeSubDomains" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+
+    # Must be >= the backend's servlet.multipart.max-request-size (300MB, see application.yml) -
+    # otherwise nginx rejects large report/notice attachment uploads with a 413 before the
+    # request ever reaches the backend's own (more informative) size-limit error.
+    client_max_body_size 300M;
+
+    gzip on;
+    gzip_types text/plain text/css application/javascript application/json image/svg+xml;
+
+    root /usr/share/nginx/html;
+    index index.html;
+
+    # Hashed build assets (index-XXXXXXXX.js/css) are safe to cache forever.
+    location /assets/ {
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+    }
+
+    location /api/ {
+        proxy_pass http://backend:8080/api/;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_read_timeout 60s;
+        proxy_send_timeout 60s;
+    }
+
+    # React Router client-side routing: any path that isn't a real static file falls back to
+    # index.html so deep links (e.g. /admin/reports/xyz) don't 404 on direct load/refresh.
+    location / {
+        try_files $uri /index.html;
+    }
+}

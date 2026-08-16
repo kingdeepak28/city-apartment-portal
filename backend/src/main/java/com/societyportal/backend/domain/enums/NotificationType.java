@@ -1,0 +1,14 @@
+package com.societyportal.backend.domain.enums;
+
+public enum NotificationType {
+    REGISTRATION_SUBMITTED,
+    REGISTRATION_APPROVED,
+    REGISTRATION_REJECTED,
+    INFO_REQUESTED,
+    REPORT_PUBLISHED,
+    NOTICE_PUBLISHED,
+    NOTICE_URGENT,
+    NOTICE_REMINDER,
+    ACCOUNT_SUSPENDED,
+    BROADCAST
+}

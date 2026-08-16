@@ -1,0 +1,105 @@
+# Production stack: postgres + backend (Spring Boot) + frontend (nginx: static SPA + reverse
+# proxy to backend + TLS) + certbot (Let's Encrypt issuance/renewal).
+#
+# Usage: see DEPLOYMENT.md. Quick version:
+#   cp deploy/.env.prod.example .env
+#   ${EDITOR:-nano} .env                              # fill in DOMAIN, passwords, JWT secret, SMTP...
+#   ./deploy/init-letsencrypt.sh                       # one-time: issue the TLS certificate
+#   docker compose -f docker-compose.prod.yml up -d --build
+#
+# Only the frontend container publishes ports to the host (80/443) - postgres and the backend
+# are reachable only from other containers on the internal network, not from the internet.
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME} -d ${DB_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    mem_limit: 1g
+    networks: [internal]
+
+  backend:
+    build:
+      context: ./backend
+    restart: unless-stopped
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      DB_URL: jdbc:postgresql://postgres:5432/${DB_NAME}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_ACCESS_TTL: ${JWT_ACCESS_TTL:-60}
+      JWT_REFRESH_TTL: ${JWT_REFRESH_TTL:-7}
+      CORS_ORIGINS: https://${DOMAIN},https://www.${DOMAIN}
+      MAIL_ENABLED: ${MAIL_ENABLED:-true}
+      MAIL_HOST: ${MAIL_HOST}
+      MAIL_PORT: ${MAIL_PORT:-587}
+      MAIL_USERNAME: ${MAIL_USERNAME}
+      MAIL_PASSWORD: ${MAIL_PASSWORD}
+      MAIL_FROM: ${MAIL_FROM}
+      SMS_ENABLED: ${SMS_ENABLED:-false}
+      FILE_STORAGE_ROOT: /data/uploads
+      SOCIETY_NAME: ${SOCIETY_NAME:-Green Valley Co-operative Housing Society}
+    volumes:
+      - uploads:/data/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+    mem_limit: 1536m
+    networks: [internal]
+
+  frontend:
+    build:
+      context: ./frontend
+    restart: unless-stopped
+    environment:
+      DOMAIN: ${DOMAIN}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - certbot_conf:/etc/letsencrypt
+      - certbot_www:/var/www/certbot
+    depends_on:
+      backend:
+        condition: service_healthy
+    mem_limit: 256m
+    networks: [internal]
+
+  # Re-checks certificate expiry twice a day and renews when due; nginx must be reloaded
+  # separately after a renewal (see deploy/renew-and-reload.sh, wired up via cron in DEPLOYMENT.md).
+  certbot:
+    image: certbot/certbot
+    restart: unless-stopped
+    volumes:
+      - certbot_conf:/etc/letsencrypt
+      - certbot_www:/var/www/certbot
+    entrypoint: >
+      /bin/sh -c "trap exit TERM; while :; do certbot renew --webroot -w /var/www/certbot --quiet; sleep 12h & wait $${!}; done"
+    mem_limit: 128m
+    networks: [internal]
+
+volumes:
+  pg_data:
+  uploads:
+  certbot_conf:
+  certbot_www:
+
+networks:
+  internal:
