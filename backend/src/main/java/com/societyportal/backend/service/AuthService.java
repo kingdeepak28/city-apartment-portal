@@ -43,6 +43,9 @@ public class AuthService {
     @Value("${app.security.lockout-minutes}")
     private long lockoutMinutes;
 
+    @Value("${app.frontend-url}")
+    private String frontendUrl;
+
     @Transactional
     public AuthDtos.LoginResponse login(String identifier, String password) {
         Optional<AdminUser> adminOpt = adminUserRepository.findByEmailIgnoreCaseOrMobile(identifier, identifier);
@@ -138,16 +141,21 @@ public class AuthService {
         if (userOpt.isEmpty() && adminOpt.isEmpty()) {
             return; // do not reveal whether the account exists
         }
-        AccountType type = userOpt.isPresent() ? AccountType.USER : AccountType.ADMIN;
-        UUID accountId = userOpt.map(User::getId).orElseGet(() -> adminOpt.get().getId());
-        String email = userOpt.map(User::getEmail).orElseGet(() -> adminOpt.get().getEmail());
+        // Must match login()'s admin-first priority (see below): if the same identifier somehow
+        // matches both an admin and a member account, resetting the one login won't actually use
+        // just leaves the account truly locked out - "reset succeeded" but the new password still
+        // never works. checkDuplicate()/AdminAccountService.create() now prevent this from
+        // happening for new accounts, but this keeps the two lookups consistent regardless.
+        AccountType type = adminOpt.isPresent() ? AccountType.ADMIN : AccountType.USER;
+        UUID accountId = adminOpt.map(AdminUser::getId).orElseGet(() -> userOpt.get().getId());
+        String email = adminOpt.map(AdminUser::getEmail).orElseGet(() -> userOpt.get().getEmail());
 
         String token = UUID.randomUUID().toString();
         resetTokenRepository.save(PasswordResetToken.builder()
                 .accountType(type).accountId(accountId).token(token)
                 .expiresAt(OffsetDateTime.now().plusMinutes(30)).used(false).build());
 
-        String link = "/reset-password?token=" + token;
+        String link = frontendUrl + "/reset-password?token=" + token;
         emailService.send(email, "Reset your Society Document Portal password",
                 "Click the link below to reset your password (valid for 30 minutes):<br/><a href=\"" + link + "\">" + link + "</a>");
     }

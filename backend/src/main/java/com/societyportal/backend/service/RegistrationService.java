@@ -32,10 +32,14 @@ public class RegistrationService {
             List.of(UserStatus.PENDING, UserStatus.ACTIVE, UserStatus.INFO_REQUESTED);
 
     public void checkDuplicate(String email, String mobile, String flatNo, String block) {
-        if (email != null && userRepository.existsByEmailIgnoreCase(email)) {
+        // Must also check admin_users, not just users: login resolves an identifier against
+        // admin_users first (see AuthService.login), so an email/mobile that already belongs to
+        // an admin account would otherwise register a member account that can never actually log
+        // in - the login form always finds the admin match first and never gets to this one.
+        if (email != null && (userRepository.existsByEmailIgnoreCase(email) || adminUserRepository.existsByEmailIgnoreCase(email))) {
             throw ApiException.conflict("An account with this email already exists");
         }
-        if (mobile != null && userRepository.existsByMobile(mobile)) {
+        if (mobile != null && (userRepository.existsByMobile(mobile) || adminUserRepository.existsByMobile(mobile))) {
             throw ApiException.conflict("An account with this mobile number already exists");
         }
         if (flatNo != null && block != null

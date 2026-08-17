@@ -113,6 +113,14 @@
             <version>2.9.2</version>
         </dependency>
 
+        <!-- Proper RFC 4180 CSV parsing for bulk user import (quoted fields, embedded commas,
+             header-based column access) instead of a naive String.split(",") -->
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-csv</artifactId>
+            <version>1.11.0</version>
+        </dependency>
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>

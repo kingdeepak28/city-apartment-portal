@@ -6,6 +6,7 @@ import com.societyportal.backend.domain.enums.AdminStatus;
 import com.societyportal.backend.dto.AdminAccountDtos;
 import com.societyportal.backend.exception.ApiException;
 import com.societyportal.backend.repository.AdminUserRepository;
+import com.societyportal.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -20,6 +21,7 @@ import java.util.UUID;
 public class AdminAccountService {
 
     private final AdminUserRepository adminUserRepository;
+    private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuditService auditService;
     private final EmailService emailService;
@@ -31,8 +33,18 @@ public class AdminAccountService {
 
     @Transactional
     public AdminAccountDtos.AdminSummary create(AdminAccountDtos.CreateAdminRequest req) {
-        if (adminUserRepository.existsByEmailIgnoreCase(req.getEmail())) {
-            throw ApiException.conflict("An admin account with this email already exists");
+        // Must also check the member table, not just admin_users: login resolves an identifier
+        // against admin_users first (see AuthService.login), so handing this email/mobile to a
+        // new admin account here would silently strand any existing member account sharing it -
+        // that member could never log in again, since the login form would always match the
+        // admin account instead.
+        if (adminUserRepository.existsByEmailIgnoreCase(req.getEmail())
+                || userRepository.existsByEmailIgnoreCase(req.getEmail())) {
+            throw ApiException.conflict("An account with this email already exists");
+        }
+        if (req.getMobile() != null && !req.getMobile().isBlank()
+                && (adminUserRepository.existsByMobile(req.getMobile()) || userRepository.existsByMobile(req.getMobile()))) {
+            throw ApiException.conflict("An account with this mobile number already exists");
         }
         String password = (req.getPassword() == null || req.getPassword().isBlank()) ? generateTempPassword() : req.getPassword();
         AdminUser admin = AdminUser.builder()

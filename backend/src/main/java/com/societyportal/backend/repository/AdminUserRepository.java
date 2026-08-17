@@ -13,4 +13,6 @@ public interface AdminUserRepository extends JpaRepository<AdminUser, UUID> {
     Optional<AdminUser> findByEmailIgnoreCaseOrMobile(String email, String mobile);
 
     boolean existsByEmailIgnoreCase(String email);
+
+    boolean existsByMobile(String mobile);
 }

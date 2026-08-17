@@ -24,6 +24,7 @@ interface LoginHistoryItem {
 export default function Profile() {
   const { notify } = useToast();
   const [profile, setProfile] = useState<ProfileResponse | null>(null);
+  const [photoSrc, setPhotoSrc] = useState<string | null>(null);
   const [name, setName] = useState("");
   const [history, setHistory] = useState<LoginHistoryItem[]>([]);
   const [passwords, setPasswords] = useState({ currentPassword: "", newPassword: "", confirm: "" });
@@ -38,6 +39,27 @@ export default function Profile() {
   }
 
   useEffect(load, []);
+
+  useEffect(() => {
+    // The photo endpoint requires auth, so a plain <img src="/api/files/photo/..."> 404s/401s -
+    // browsers don't attach the app's Authorization header to image requests. Fetch it through
+    // the authenticated client instead and hand the <img> a local blob URL.
+    if (!profile?.photoUrl) {
+      setPhotoSrc(null);
+      return;
+    }
+    let objectUrl: string | null = null;
+    let cancelled = false;
+    api.get(profile.photoUrl.replace(/^\/api/, ""), { responseType: "blob" }).then((r) => {
+      if (cancelled) return;
+      objectUrl = URL.createObjectURL(r.data);
+      setPhotoSrc(objectUrl);
+    });
+    return () => {
+      cancelled = true;
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [profile?.photoUrl]);
 
   async function saveProfile() {
     try {
@@ -94,8 +116,8 @@ export default function Profile() {
       <div className="card space-y-4 p-5">
         <h2 className="font-semibold">Basic Details</h2>
         <div className="flex items-center gap-4">
-          {profile.photoUrl ? (
-            <img src={profile.photoUrl} className="h-16 w-16 rounded-full object-cover" alt="profile" />
+          {photoSrc ? (
+            <img src={photoSrc} className="h-16 w-16 rounded-full object-cover" alt="profile" />
           ) : (
             <div className="flex h-16 w-16 items-center justify-center rounded-full bg-slate-200 text-xl">
               {profile.name.charAt(0)}

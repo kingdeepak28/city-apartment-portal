@@ -1,0 +1,6 @@
+name,flatNo,block,residentType,mobile,email
+"Sharma, Rajesh",A-101,A,OWNER,9820011111,rajesh.sharma@example.com
+Priya Nair,A-102,A,TENANT,9820011112,priya.nair@example.com
+"Iyer, Kavita",B-201,B,OWNER,9820011113,kavita.iyer@example.com
+Amit Deshmukh,B-202,B,OWNER,9820011114,amit.deshmukh@example.com
+"Khan, Imran",C-301,C,TENANT,9820011115,imran.khan@example.com

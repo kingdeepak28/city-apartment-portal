@@ -6,9 +6,14 @@ import com.societyportal.backend.domain.enums.ResidentType;
 import com.societyportal.backend.domain.enums.UserStatus;
 import com.societyportal.backend.dto.UserDtos;
 import com.societyportal.backend.exception.ApiException;
+import com.societyportal.backend.repository.AdminUserRepository;
 import com.societyportal.backend.repository.UserRepository;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVParser;
+import org.apache.commons.csv.CSVRecord;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -16,26 +21,32 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.PushbackReader;
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
+import java.util.Set;
 import java.util.UUID;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class UserAdminService {
 
     private final UserRepository userRepository;
+    private final AdminUserRepository adminUserRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuditService auditService;
     private final NotificationService notificationService;
     private static final SecureRandom RANDOM = new SecureRandom();
+    private static final List<String> CSV_HEADERS =
+            List.of("name", "flatNo", "block", "residentType", "mobile", "email");
 
     public Page<UserDtos.UserSummary> list(String status, String block, String residentType,
                                             LocalDate from, LocalDate to, String keyword, Pageable pageable) {
@@ -101,41 +112,71 @@ public class UserAdminService {
         return user;
     }
 
-    @Transactional
+    /**
+     * Each row is created and validated in its own transaction (note: no class-level
+     * {@code @Transactional} here) so that one bad row - e.g. a genuine DB constraint violation
+     * slipping past the pre-checks below - can't abort the whole batch. Postgres aborts an entire
+     * transaction on the first constraint violation within it; sharing one transaction across all
+     * rows would silently roll back every row already imported, and fail every row after it too,
+     * the moment a single row conflicted.
+     */
     public UserDtos.BulkImportResult bulkImport(org.springframework.web.multipart.MultipartFile csv) {
         List<String> errors = new ArrayList<>();
         int success = 0;
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(csv.getInputStream(), StandardCharsets.UTF_8))) {
-            String header = reader.readLine(); // name,flatNo,block,residentType,mobile,email
-            String line;
-            int rowNum = 1;
-            while ((line = reader.readLine()) != null) {
-                rowNum++;
-                if (line.isBlank()) continue;
-                String[] cols = line.split(",", -1);
-                if (cols.length < 6) {
-                    errors.add("Row " + rowNum + ": expected 6 columns (name,flatNo,block,residentType,mobile,email)");
-                    continue;
-                }
+        // A real RFC 4180 parser (quoted fields with embedded commas/newlines, escaped quotes,
+        // CRLF, headers matched case/order-insensitively) instead of a naive split(",") - names
+        // like "Sharma, Rajesh" or "Doe Jr., James" are exactly the kind of ordinary data that
+        // silently corrupted every column after it under the old line.split(",") approach.
+        try (PushbackReader reader = new PushbackReader(new InputStreamReader(csv.getInputStream(), StandardCharsets.UTF_8))) {
+            final int utf8Bom = 0xFEFF;
+            int first = reader.read();
+            if (first != utf8Bom && first != -1) reader.unread(first); // skip a UTF-8 BOM if present
+
+            CSVFormat format = CSVFormat.DEFAULT.builder()
+                    .setHeader().setSkipHeaderRecord(true)
+                    .setIgnoreHeaderCase(true).setTrim(true)
+                    .setIgnoreSurroundingSpaces(true)
+                    .build();
+            CSVParser parser = format.parse(reader);
+
+            Set<String> headers = parser.getHeaderNames().stream().map(h -> h.toLowerCase(Locale.ROOT)).collect(java.util.stream.Collectors.toSet());
+            List<String> missing = CSV_HEADERS.stream().filter(h -> !headers.contains(h.toLowerCase(Locale.ROOT))).toList();
+            if (!missing.isEmpty()) {
+                throw ApiException.badRequest("CSV is missing required column(s): " + String.join(", ", missing)
+                        + ". Expected headers: " + String.join(",", CSV_HEADERS));
+            }
+
+            for (CSVRecord record : parser) {
+                // +1 for the header row itself, +1 to make it 1-indexed for a human reading the CSV
+                long rowNum = record.getRecordNumber() + 1;
+                if (record.stream().allMatch(String::isBlank)) continue;
                 try {
                     UserDtos.CreateUserRequest req = new UserDtos.CreateUserRequest();
-                    req.setFullName(cols[0].trim());
-                    req.setFlatNo(cols[1].trim());
-                    req.setBlock(cols[2].trim());
-                    req.setResidentType(cols[3].trim());
-                    req.setMobile(cols[4].trim());
-                    req.setEmail(cols[5].trim());
-                    if (userRepository.existsByEmailIgnoreCase(req.getEmail())) {
+                    req.setFullName(record.get("name"));
+                    req.setFlatNo(record.get("flatNo"));
+                    req.setBlock(record.get("block"));
+                    req.setResidentType(record.get("residentType"));
+                    req.setMobile(record.get("mobile"));
+                    req.setEmail(record.get("email"));
+
+                    // Must check admin_users too, not just users: login resolves an identifier
+                    // against admin_users first (see AuthService.login), so an email/mobile that
+                    // already belongs to an admin account would otherwise import a member account
+                    // that can never actually log in.
+                    if (userRepository.existsByEmailIgnoreCase(req.getEmail())
+                            || adminUserRepository.existsByEmailIgnoreCase(req.getEmail())) {
                         errors.add("Row " + rowNum + ": email already exists (" + req.getEmail() + ")");
                         continue;
                     }
-                    if (userRepository.existsByMobile(req.getMobile())) {
+                    if (userRepository.existsByMobile(req.getMobile())
+                            || adminUserRepository.existsByMobile(req.getMobile())) {
                         errors.add("Row " + rowNum + ": mobile already exists (" + req.getMobile() + ")");
                         continue;
                     }
                     createPreApproved(req);
                     success++;
                 } catch (Exception e) {
+                    log.warn("Bulk user import: row {} failed", rowNum, e);
                     errors.add("Row " + rowNum + ": " + e.getMessage());
                 }
             }

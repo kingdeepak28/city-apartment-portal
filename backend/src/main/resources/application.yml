@@ -64,6 +64,10 @@ app:
     enabled: ${SMS_ENABLED:false}
   cors:
     allowed-origins: ${CORS_ORIGINS:http://localhost:5173}
+  # Base URL of the deployed frontend, used to build absolute links embedded in emails (e.g. the
+  # password-reset link) - a bare relative path like "/reset-password?token=..." has nothing to
+  # resolve against inside an email client, unlike inside the SPA itself.
+  frontend-url: ${FRONTEND_URL:http://localhost:5173}
   file-storage:
     root: ${FILE_STORAGE_ROOT:./uploads}
     max-file-size-mb: 25
