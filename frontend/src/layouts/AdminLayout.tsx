@@ -2,6 +2,7 @@ import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import api from "../api/client";
+import { Footer } from "../components/ui";
 
 const navItems = [
   { to: "/admin", label: "Dashboard", end: true },
@@ -84,6 +85,7 @@ export default function AdminLayout() {
         <main className="flex-1 bg-slate-50 p-4 lg:p-6">
           <Outlet />
         </main>
+        <Footer />
       </div>
     </div>
   );

@@ -1,6 +1,7 @@
 import { FormEvent, useState } from "react";
 import { Link } from "react-router-dom";
 import api, { apiErrorMessage } from "../../api/client";
+import { Footer } from "../../components/ui";
 
 interface FormData {
   fullName: string;
@@ -99,7 +100,7 @@ export default function Register() {
 
   if (step === "submitted") {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-brand-50 to-slate-100 px-4">
+      <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-brand-50 to-slate-100 px-4">
         <div className="card w-full max-w-md p-8 text-center">
           <div className="text-4xl">✅</div>
           <h1 className="mt-3 text-xl font-bold text-brand-700">Registration Submitted</h1>
@@ -111,12 +112,13 @@ export default function Register() {
             Back to Login
           </Link>
         </div>
+        <Footer />
       </div>
     );
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-brand-50 to-slate-100 px-4 py-10">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-brand-50 to-slate-100 px-4 py-10">
       <div className="card w-full max-w-lg p-8">
         <h1 className="text-xl font-bold text-brand-700">Resident Registration</h1>
         <p className="mt-1 text-sm text-slate-500">
@@ -224,6 +226,7 @@ export default function Register() {
           </Link>
         </p>
       </div>
+      <Footer />
     </div>
   );
 }

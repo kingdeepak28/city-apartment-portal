@@ -3,6 +3,18 @@
 A full-stack implementation of the Society Document Portal functional spec:
 **Spring Boot 3 (Java 17) + PostgreSQL** backend, **React 18 + TypeScript + Tailwind** frontend.
 
+## Quick start
+
+```bash
+./run.sh
+```
+
+One command, any machine. Uses Docker if it's available; otherwise it downloads a self-contained
+toolchain (JDK 17, Maven, Node, PostgreSQL - no admin rights needed) and runs everything as plain
+local processes. See `./run.sh` itself for `stop`/`status`/`logs`. This is for local use only -
+for a real deployment see [DEPLOYMENT.md](DEPLOYMENT.md). The rest of this README covers manual,
+step-by-step setup if you'd rather not use the script.
+
 This build covers **Phase 1** of the spec's own delivery plan (Section 13), fully wired end-to-end:
 
 - Authentication (JWT), self-registration with admin approval workflow
@@ -190,3 +202,7 @@ npm run build     # production build to frontend/dist
 - No automated tests were written given the scope of this pass - add `@SpringBootTest` /
   `@WebMvcTest` coverage for the approval workflow and publish/notify flow first, since those are the
   highest-value paths to protect.
+
+## License
+
+Copyright © 2026 Deepak Maheshwari. All rights reserved. See [LICENSE](LICENSE).

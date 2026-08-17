@@ -49,6 +49,14 @@ export function EmptyState({ message }: { message: string }) {
   return <div className="py-12 text-center text-sm text-slate-400">{message}</div>;
 }
 
+export function Footer() {
+  return (
+    <footer className="py-4 text-center text-xs text-slate-400">
+      © {new Date().getFullYear()} Deepak Maheshwari. All rights reserved.
+    </footer>
+  );
+}
+
 export function Spinner() {
   return (
     <div className="flex justify-center py-8">

@@ -1,6 +1,7 @@
 import { FormEvent, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import api, { apiErrorMessage } from "../../api/client";
+import { Footer } from "../../components/ui";
 
 export default function ResetPassword() {
   const [params] = useSearchParams();
@@ -22,7 +23,7 @@ export default function ResetPassword() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-brand-50 to-slate-100 px-4">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-brand-50 to-slate-100 px-4">
       <div className="card w-full max-w-md p-8">
         <h1 className="text-xl font-bold text-brand-700">Reset Password</h1>
         {done ? (
@@ -50,6 +51,7 @@ export default function ResetPassword() {
           </Link>
         </p>
       </div>
+      <Footer />
     </div>
   );
 }

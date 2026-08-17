@@ -41,7 +41,6 @@ services:
       JWT_ACCESS_TTL: ${JWT_ACCESS_TTL:-60}
       JWT_REFRESH_TTL: ${JWT_REFRESH_TTL:-7}
       CORS_ORIGINS: https://${DOMAIN},https://www.${DOMAIN}
-      FRONTEND_URL: https://${DOMAIN}
       MAIL_ENABLED: ${MAIL_ENABLED:-true}
       MAIL_HOST: ${MAIL_HOST}
       MAIL_PORT: ${MAIL_PORT:-587}
@@ -50,7 +49,7 @@ services:
       MAIL_FROM: ${MAIL_FROM}
       SMS_ENABLED: ${SMS_ENABLED:-false}
       FILE_STORAGE_ROOT: /data/uploads
-      SOCIETY_NAME: ${SOCIETY_NAME:-Green Valley Co-operative Housing Society}
+      SOCIETY_NAME: ${SOCIETY_NAME:-City Apartments}
     volumes:
       - uploads:/data/uploads
     depends_on:

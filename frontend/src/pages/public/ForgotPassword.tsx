@@ -1,6 +1,7 @@
 import { FormEvent, useState } from "react";
 import { Link } from "react-router-dom";
 import api, { apiErrorMessage } from "../../api/client";
+import { Footer } from "../../components/ui";
 
 export default function ForgotPassword() {
   const [identifier, setIdentifier] = useState("");
@@ -19,7 +20,7 @@ export default function ForgotPassword() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-brand-50 to-slate-100 px-4">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-brand-50 to-slate-100 px-4">
       <div className="card w-full max-w-md p-8">
         <h1 className="text-xl font-bold text-brand-700">Forgot Password</h1>
         {sent ? (
@@ -42,6 +43,7 @@ export default function ForgotPassword() {
           </Link>
         </p>
       </div>
+      <Footer />
     </div>
   );
 }

@@ -2,6 +2,7 @@ import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import api from "../api/client";
+import { Footer } from "../components/ui";
 
 const navItems = [
   { to: "/member", label: "Dashboard", end: true },
@@ -87,6 +88,7 @@ export default function MemberLayout() {
       <main className="mx-auto max-w-6xl p-4 lg:p-6">
         <Outlet />
       </main>
+      <Footer />
     </div>
   );
 }

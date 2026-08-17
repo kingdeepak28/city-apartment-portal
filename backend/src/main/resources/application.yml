@@ -80,4 +80,4 @@ app:
     lockout-minutes: 15
   approval-sla-days: 3
   society:
-    name: ${SOCIETY_NAME:Green Valley Co-operative Housing Society}
+    name: ${SOCIETY_NAME:City Apartments}

@@ -77,7 +77,7 @@ INSERT INTO categories (type, name, display_order) VALUES
 
 -- System settings
 INSERT INTO settings (key, value, description) VALUES
-    ('society.name', 'Green Valley Co-operative Housing Society', 'Society display name'),
+    ('society.name', 'City Apartments', 'Society display name'),
     ('society.regNo', '', 'Society registration number'),
     ('society.address', '', 'Society registered address'),
     ('society.contactEmail', 'office@societyportal.local', 'Society contact email'),

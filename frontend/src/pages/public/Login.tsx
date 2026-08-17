@@ -2,6 +2,7 @@ import { FormEvent, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { apiErrorMessage } from "../../api/client";
+import { Footer } from "../../components/ui";
 
 export default function Login() {
   const { login } = useAuth();
@@ -26,7 +27,7 @@ export default function Login() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-brand-50 to-slate-100 px-4">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-brand-50 to-slate-100 px-4">
       <div className="card w-full max-w-md p-8">
         <h1 className="text-xl font-bold text-brand-700">Society Document Portal</h1>
         <p className="mt-1 text-sm text-slate-500">Sign in to continue</p>
@@ -71,6 +72,7 @@ export default function Login() {
           Demo member: demo.member@societyportal.local / Member@123
         </div>
       </div>
+      <Footer />
     </div>
   );
 }

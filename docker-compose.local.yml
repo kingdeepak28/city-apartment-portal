@@ -1,0 +1,70 @@
+# One-command local run: no domain, no TLS, no .env file required - every value below is a
+# dev-only default. Launched by run.sh, or directly via:
+#   docker compose -f docker-compose.local.yml up --build
+# Then open http://localhost:8080
+#
+# This is NOT the production stack - for a real deployment (real domain, TLS, secrets from a
+# real .env), use docker-compose.prod.yml and DEPLOYMENT.md instead.
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: society_portal
+      POSTGRES_USER: society_admin
+      POSTGRES_PASSWORD: society_admin
+    volumes:
+      - local_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U society_admin -d society_portal"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks: [local]
+
+  backend:
+    build:
+      context: ./backend
+    restart: unless-stopped
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/society_portal
+      DB_USERNAME: society_admin
+      DB_PASSWORD: society_admin
+      # Dev-only placeholder - fine for a throwaway local run, never reuse this for anything real.
+      JWT_SECRET: local-dev-only-secret-change-before-any-real-use-min-32-bytes
+      CORS_ORIGINS: http://localhost:8080
+      FRONTEND_URL: http://localhost:8080
+      MAIL_ENABLED: "false"
+      SMS_ENABLED: "false"
+    volumes:
+      - local_uploads:/data/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+    networks: [local]
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.local
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks: [local]
+
+volumes:
+  local_pg_data:
+  local_uploads:
+
+networks:
+  local:
