@@ -1,3 +1,5 @@
+// Author: deepak.maheshwari
+
 import { FormEvent, useState } from "react";
 import { Link } from "react-router-dom";
 import api, { apiErrorMessage } from "../../api/client";
@@ -13,6 +15,8 @@ interface FormData {
   password: string;
   confirmPassword: string;
 }
+
+const PROOF_MAX_SIZE_BYTES = 2 * 1024 * 1024; // 2MB - keep in sync with RegistrationService.java
 
 const initialForm: FormData = {
   fullName: "",
@@ -68,6 +72,10 @@ export default function Register() {
     setError("");
     if (!proof) {
       setError("Please attach an ID/ownership proof document");
+      return;
+    }
+    if (proof.size > PROOF_MAX_SIZE_BYTES) {
+      setError("Proof document must be 2MB or smaller");
       return;
     }
     setBusy(true);
@@ -199,11 +207,24 @@ export default function Register() {
           <form className="mt-6 space-y-5" onSubmit={submitRegistration}>
             <div>
               <label className="label">ID / Ownership Proof Document</label>
+              <p className="mb-1.5 text-xs text-slate-500">
+                Please upload membership/share certificate document only (max 2MB)
+              </p>
               <input
                 className="input"
                 type="file"
                 accept=".pdf,.jpg,.jpeg,.png"
-                onChange={(e) => setProof(e.target.files?.[0] ?? null)}
+                onChange={(e) => {
+                  const file = e.target.files?.[0] ?? null;
+                  if (file && file.size > PROOF_MAX_SIZE_BYTES) {
+                    setError("Proof document must be 2MB or smaller");
+                    e.target.value = "";
+                    setProof(null);
+                    return;
+                  }
+                  setError("");
+                  setProof(file);
+                }}
                 required
               />
             </div>

@@ -1,3 +1,5 @@
+// Author: deepak.maheshwari
+
 import { useEffect, useState } from "react";
 import api, { apiErrorMessage } from "../../api/client";
 import { formatDateTime } from "../../components/ui";
@@ -20,6 +22,8 @@ interface LoginHistoryItem {
   ip: string;
   status: string;
 }
+
+const PHOTO_MAX_SIZE_BYTES = 2 * 1024 * 1024; // 2MB - keep in sync with ProfileService.java
 
 export default function Profile() {
   const { notify } = useToast();
@@ -72,6 +76,10 @@ export default function Profile() {
   }
 
   async function uploadPhoto(file: File) {
+    if (file.size > PHOTO_MAX_SIZE_BYTES) {
+      notify("Photo must be 2MB or smaller", "error");
+      return;
+    }
     const fd = new FormData();
     fd.append("photo", file);
     try {
@@ -123,7 +131,23 @@ export default function Profile() {
               {profile.name.charAt(0)}
             </div>
           )}
-          <input type="file" accept="image/*" onChange={(e) => e.target.files?.[0] && uploadPhoto(e.target.files[0])} />
+          <div>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (!file) return;
+                if (file.size > PHOTO_MAX_SIZE_BYTES) {
+                  notify("Photo must be 2MB or smaller", "error");
+                  e.target.value = "";
+                  return;
+                }
+                uploadPhoto(file);
+              }}
+            />
+            <p className="mt-1 text-xs text-slate-400">Max 2MB</p>
+          </div>
         </div>
         <div>
           <label className="label">Name</label>

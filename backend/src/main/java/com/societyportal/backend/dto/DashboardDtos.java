@@ -1,3 +1,5 @@
+// Author: deepak.maheshwari
+
 package com.societyportal.backend.dto;
 
 import lombok.AllArgsConstructor;
@@ -59,6 +61,7 @@ public class DashboardDtos {
     public static class MemberDashboardResponse {
         private String memberName;
         private String flatNo;
+        private String block;
         private long unreadNotificationCount;
         private List<DocumentDtos.DocumentListItem> latestNotices;
         private List<DocumentDtos.DocumentListItem> recentReports;

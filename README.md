@@ -1,4 +1,4 @@
-# Society Document Portal
+# City Apartment Portal
 
 A full-stack implementation of the Society Document Portal functional spec:
 **Spring Boot 3 (Java 17) + PostgreSQL** backend, **React 18 + TypeScript + Tailwind** frontend.
@@ -158,7 +158,8 @@ flip `SMS_ENABLED=true` and fill in a real provider call in
 ## 4. Deploying to production
 
 The steps above are for local development only. For a real deployment behind a domain (Docker
-Compose, nginx, Let's Encrypt TLS, backups, sizing guidance), see **[DEPLOYMENT.md](DEPLOYMENT.md)**.
+Compose, nginx, Let's Encrypt TLS, backups, sizing guidance), see **[DEPLOYMENT.md](DEPLOYMENT.md)**
+(or **[DEPLOYMENT-GODADDY.md](DEPLOYMENT-GODADDY.md)** if hosting on a GoDaddy VPS).
 
 ## 5. Frontend
 
@@ -205,4 +206,4 @@ npm run build     # production build to frontend/dist
 
 ## License
 
-Copyright © 2026 Deepak Maheshwari. All rights reserved. See [LICENSE](LICENSE).
+Copyright © 2026 City Apartments Owner Association. All rights reserved. See [LICENSE](LICENSE).

@@ -1,3 +1,5 @@
+// Author: deepak.maheshwari
+
 package com.societyportal.backend.controller;
 
 import com.societyportal.backend.domain.DocumentFile;
@@ -94,6 +96,7 @@ public class FileController {
         Path path = fileStorageService.resolve(user.getProofFilePath());
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "inline")
+                .contentType(MediaType.parseMediaType(fileStorageService.detectMimeType(path)))
                 .body(new FileSystemResource(path));
     }
 
@@ -104,6 +107,9 @@ public class FileController {
             throw ApiException.notFound("No photo on file");
         }
         Path path = fileStorageService.resolve(user.getPhotoPath());
-        return ResponseEntity.ok().header(HttpHeaders.CONTENT_DISPOSITION, "inline").body(new FileSystemResource(path));
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "inline")
+                .contentType(MediaType.parseMediaType(fileStorageService.detectMimeType(path)))
+                .body(new FileSystemResource(path));
     }
 }

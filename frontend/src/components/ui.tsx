@@ -1,3 +1,5 @@
+// Author: deepak.maheshwari
+
 import { ReactNode } from "react";
 
 export function Badge({ children, color = "slate" }: { children: ReactNode; color?: string }) {
@@ -52,7 +54,7 @@ export function EmptyState({ message }: { message: string }) {
 export function Footer() {
   return (
     <footer className="py-4 text-center text-xs text-slate-400">
-      © {new Date().getFullYear()} Deepak Maheshwari. All rights reserved.
+      © {new Date().getFullYear()} City Apartments Owner Association. All rights reserved.
     </footer>
   );
 }

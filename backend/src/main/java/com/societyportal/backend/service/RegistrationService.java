@@ -1,3 +1,5 @@
+// Author: deepak.maheshwari
+
 package com.societyportal.backend.service;
 
 import com.societyportal.backend.domain.AdminUser;
@@ -31,6 +33,10 @@ public class RegistrationService {
     private static final List<UserStatus> ACTIVE_LIKE_STATUSES =
             List.of(UserStatus.PENDING, UserStatus.ACTIVE, UserStatus.INFO_REQUESTED);
 
+    // Stricter than the app-wide app.file-storage.max-file-size-mb default (25MB) - a
+    // membership/share certificate is a small document, not a scanned multi-page report.
+    private static final long PROOF_MAX_SIZE_BYTES = 2L * 1024 * 1024;
+
     public void checkDuplicate(String email, String mobile, String flatNo, String block) {
         // Must also check admin_users, not just users: login resolves an identifier against
         // admin_users first (see AuthService.login), so an email/mobile that already belongs to
@@ -56,7 +62,7 @@ public class RegistrationService {
             throw ApiException.badRequest("ID/ownership proof document is required");
         }
 
-        FileStorageService.StoredFile stored = fileStorageService.store(proof, "registration-proofs");
+        FileStorageService.StoredFile stored = fileStorageService.store(proof, "registration-proofs", PROOF_MAX_SIZE_BYTES);
 
         User user = User.builder()
                 .name(req.getFullName())

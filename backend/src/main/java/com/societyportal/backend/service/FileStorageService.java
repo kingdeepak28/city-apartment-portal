@@ -1,3 +1,5 @@
+// Author: deepak.maheshwari
+
 package com.societyportal.backend.service;
 
 import com.societyportal.backend.exception.ApiException;
@@ -51,12 +53,18 @@ public class FileStorageService {
 
     /** Validates extension, size and actual content signature, then stores the file under a random path. */
     public StoredFile store(MultipartFile file, String subDir) {
+        return store(file, subDir, maxFileSizeBytes);
+    }
+
+    /** Same as {@link #store(MultipartFile, String)}, but with a smaller size cap for this one
+     *  call - e.g. registration proofs use a stricter 2MB limit than the app-wide default. */
+    public StoredFile store(MultipartFile file, String subDir, long maxSizeBytesOverride) {
         if (file == null || file.isEmpty()) {
             throw ApiException.badRequest("File is empty");
         }
-        if (file.getSize() > maxFileSizeBytes) {
+        if (file.getSize() > maxSizeBytesOverride) {
             throw ApiException.badRequest("File exceeds the maximum allowed size of "
-                    + (maxFileSizeBytes / (1024 * 1024)) + " MB");
+                    + (maxSizeBytesOverride / (1024 * 1024)) + " MB");
         }
         String originalName = StringUtils.cleanPath(file.getOriginalFilename() == null ? "file" : file.getOriginalFilename());
         String extension = getExtension(originalName).toLowerCase();
@@ -97,6 +105,19 @@ public class FileStorageService {
             throw ApiException.badRequest("Invalid file path");
         }
         return resolved;
+    }
+
+    /** Detects the real content type from the file's bytes (not just its name) - used by
+     *  endpoints serving files whose MIME type was never stored anywhere (registration proofs,
+     *  profile photos), unlike Document/DocumentFile uploads which persist it at upload time. */
+    public String detectMimeType(Path path) {
+        try {
+            String detected = tika.detect(path);
+            return detected != null ? detected : "application/octet-stream";
+        } catch (IOException e) {
+            log.warn("Could not detect content type for {}", path, e);
+            return "application/octet-stream";
+        }
     }
 
     public void delete(String relativePath) {

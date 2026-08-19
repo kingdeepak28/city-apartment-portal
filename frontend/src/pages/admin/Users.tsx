@@ -1,3 +1,5 @@
+// Author: deepak.maheshwari
+
 import { useEffect, useState } from "react";
 import api, { apiErrorMessage } from "../../api/client";
 import { Page, UserSummary } from "../../api/types";
@@ -39,10 +41,12 @@ export default function Users() {
     }
   }
 
-  async function unlock(id: string) {
+  async function deleteUser(id: string, name: string) {
+    if (!window.confirm(`Permanently delete ${name}? This cannot be undone.`)) return;
     try {
-      await api.post(`/admin/users/${id}/unlock`);
-      notify("Account unlocked", "success");
+      await api.delete(`/admin/users/${id}`);
+      notify("User deleted", "success");
+      load();
     } catch (err) {
       notify(apiErrorMessage(err), "error");
     }
@@ -142,11 +146,11 @@ export default function Users() {
                           Reactivate
                         </button>
                       )}
-                      <button className="btn-secondary btn-sm" onClick={() => unlock(u.id)}>
-                        Unlock
-                      </button>
                       <button className="btn-secondary btn-sm" onClick={() => triggerReset(u.id)}>
                         Reset PW
+                      </button>
+                      <button className="btn-danger btn-sm" onClick={() => deleteUser(u.id, u.name)}>
+                        Delete
                       </button>
                     </div>
                   </td>

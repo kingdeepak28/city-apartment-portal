@@ -1,3 +1,5 @@
+// Author: deepak.maheshwari
+
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import api from "../../api/client";
@@ -17,7 +19,9 @@ export default function Dashboard() {
     <div className="space-y-6">
       <div>
         <h1 className="text-xl font-semibold">Welcome, {data.memberName}</h1>
-        <p className="text-sm text-slate-500">Flat {data.flatNo}</p>
+        <p className="text-sm text-slate-500">
+          Flat {data.flatNo} / Block {data.block}
+        </p>
       </div>
 
       {data.pinnedNotice && (

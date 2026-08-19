@@ -1,3 +1,5 @@
+// Author: deepak.maheshwari
+
 package com.societyportal.backend.domain;
 
 import com.societyportal.backend.domain.enums.CategoryType;

@@ -1,3 +1,5 @@
+// Author: deepak.maheshwari
+
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
@@ -35,7 +37,7 @@ export default function AdminLayout() {
     <div className="flex min-h-screen">
       <aside className="hidden w-64 shrink-0 border-r border-slate-200 bg-white lg:block">
         <div className="border-b border-slate-200 px-5 py-4">
-          <div className="text-lg font-bold text-brand-700">Society Portal</div>
+          <div className="text-lg font-bold text-brand-700">City Apartment Portal</div>
           <div className="text-xs text-slate-400">Admin Console</div>
         </div>
         <nav className="flex flex-col gap-0.5 p-3">
@@ -57,7 +59,7 @@ export default function AdminLayout() {
       </aside>
       <div className="flex min-h-screen flex-1 flex-col">
         <header className="flex items-center justify-between border-b border-slate-200 bg-white px-4 py-3 lg:px-6">
-          <div className="text-sm text-slate-500 lg:hidden font-semibold text-brand-700">Society Portal</div>
+          <div className="text-sm text-slate-500 lg:hidden font-semibold text-brand-700">City Apartment Portal</div>
           <div className="ml-auto flex items-center gap-4">
             <span className="relative text-lg" title={`${unread} unread`}>
               🔔

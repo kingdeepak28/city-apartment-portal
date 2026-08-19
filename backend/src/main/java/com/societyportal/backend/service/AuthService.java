@@ -1,3 +1,5 @@
+// Author: deepak.maheshwari
+
 package com.societyportal.backend.service;
 
 import com.societyportal.backend.domain.AdminUser;
@@ -156,7 +158,7 @@ public class AuthService {
                 .expiresAt(OffsetDateTime.now().plusMinutes(30)).used(false).build());
 
         String link = frontendUrl + "/reset-password?token=" + token;
-        emailService.send(email, "Reset your Society Document Portal password",
+        emailService.send(email, "Reset your City Apartment Portal password",
                 "Click the link below to reset your password (valid for 30 minutes):<br/><a href=\"" + link + "\">" + link + "</a>");
     }
 

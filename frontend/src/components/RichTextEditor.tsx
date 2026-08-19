@@ -1,3 +1,5 @@
+// Author: deepak.maheshwari
+
 import { useEffect, useRef } from "react";
 
 /** A small dependency-free rich-text editor backed by contentEditable + execCommand,

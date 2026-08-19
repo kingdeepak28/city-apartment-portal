@@ -1,3 +1,5 @@
+// Author: deepak.maheshwari
+
 export type AccountType = "USER" | "ADMIN";
 export type AdminRole = "SUPER_ADMIN" | "ADMIN" | "UPLOADER";
 
@@ -152,6 +154,7 @@ export interface AdminDashboardResponse {
 export interface MemberDashboardResponse {
   memberName: string;
   flatNo: string;
+  block: string;
   unreadNotificationCount: number;
   latestNotices: DocumentListItem[];
   recentReports: DocumentListItem[];

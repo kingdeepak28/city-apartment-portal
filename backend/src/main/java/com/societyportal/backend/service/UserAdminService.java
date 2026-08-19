@@ -1,3 +1,5 @@
+// Author: deepak.maheshwari
+
 package com.societyportal.backend.service;
 
 import com.societyportal.backend.domain.User;
@@ -105,7 +107,7 @@ public class UserAdminService {
         user = userRepository.save(user);
         auditService.log("USER", "ADMIN_CREATED", user.getId().toString(), null, null);
         notificationService.notifyMembers(List.of(user), NotificationType.REGISTRATION_APPROVED,
-                "Your Society Document Portal account is ready",
+                "Your City Apartment Portal account is ready",
                 "An account has been created for you. Temporary password: " + password
                         + " - please log in and change it immediately.",
                 "/login", true, null);
@@ -197,7 +199,7 @@ public class UserAdminService {
         if (newStatus == UserStatus.SUSPENDED) {
             notificationService.notifyMembers(List.of(user), NotificationType.ACCOUNT_SUSPENDED,
                     "Your account has been suspended",
-                    "Your access to the Society Document Portal has been suspended by the administrator.",
+                    "Your access to the City Apartment Portal has been suspended by the administrator.",
                     "/login", true, null);
         }
     }

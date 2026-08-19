@@ -1,3 +1,5 @@
+// Author: deepak.maheshwari
+
 import { FormEvent, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
@@ -29,7 +31,7 @@ export default function Login() {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-brand-50 to-slate-100 px-4">
       <div className="card w-full max-w-md p-8">
-        <h1 className="text-xl font-bold text-brand-700">Society Document Portal</h1>
+        <h1 className="text-xl font-bold text-brand-700">City Apartment Portal</h1>
         <p className="mt-1 text-sm text-slate-500">Sign in to continue</p>
 
         {error && <div className="mt-4 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">{error}</div>}
@@ -65,12 +67,6 @@ export default function Login() {
             Register here
           </Link>
         </p>
-
-        <div className="mt-6 rounded-md bg-slate-50 p-3 text-xs text-slate-400">
-          Demo admin: super.admin@societyportal.local / Admin@123
-          <br />
-          Demo member: demo.member@societyportal.local / Member@123
-        </div>
       </div>
       <Footer />
     </div>

@@ -1,3 +1,5 @@
+// Author: deepak.maheshwari
+
 package com.societyportal.backend.repository;
 
 import com.societyportal.backend.domain.DocumentAccessLog;

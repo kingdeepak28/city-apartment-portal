@@ -1,3 +1,5 @@
+// Author: deepak.maheshwari
+
 import { useEffect, useState } from "react";
 import api, { apiErrorMessage } from "../../api/client";
 import { Page, UserSummary } from "../../api/types";
@@ -15,6 +17,7 @@ export default function Approvals() {
   const [residentType, setResidentType] = useState("");
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [proofModal, setProofModal] = useState<UserSummary | null>(null);
+  const [proofSrc, setProofSrc] = useState<string | null>(null);
   const [rejectModal, setRejectModal] = useState<UserSummary | { bulk: true } | null>(null);
   const [rejectReason, setRejectReason] = useState(REJECTION_REASONS[0]);
   const [rejectRemarks, setRejectRemarks] = useState("");
@@ -86,6 +89,34 @@ export default function Approvals() {
       notify(apiErrorMessage(err), "error");
     }
   }
+
+  useEffect(() => {
+    // /api/files/registration-proof/{id} requires auth, so a plain <iframe src="..."> gets a 401
+    // ("Authentication required or session expired") - the browser doesn't attach the app's
+    // Authorization header to a frame/image navigation. Fetch it through the authenticated
+    // client instead and hand the iframe a local blob URL, same fix as the member profile photo.
+    if (!proofModal?.proofFileUrl) {
+      setProofSrc(null);
+      return;
+    }
+    let objectUrl: string | null = null;
+    let cancelled = false;
+    api
+      .get(proofModal.proofFileUrl.replace(/^\/api/, ""), { responseType: "blob" })
+      .then((r) => {
+        if (cancelled) return;
+        objectUrl = URL.createObjectURL(r.data);
+        setProofSrc(objectUrl);
+      })
+      .catch((err) => {
+        if (!cancelled) notify(apiErrorMessage(err), "error");
+      });
+    return () => {
+      cancelled = true;
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [proofModal]);
 
   function toggle(id: string) {
     setSelected((s) => {
@@ -199,7 +230,11 @@ export default function Approvals() {
       {proofModal && (
         <Modal title={`Proof - ${proofModal.name}`} onClose={() => setProofModal(null)} wide>
           {proofModal.proofFileUrl ? (
-            <iframe src={proofModal.proofFileUrl} className="h-[70vh] w-full rounded border" title="proof" />
+            proofSrc ? (
+              <iframe src={proofSrc} className="h-[70vh] w-full rounded border" title="proof" />
+            ) : (
+              <Spinner />
+            )
           ) : (
             <p className="text-sm text-slate-500">No proof document available</p>
           )}

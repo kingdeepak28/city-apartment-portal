@@ -41,6 +41,18 @@ $COMPOSE run --rm --entrypoint sh frontend -c "
 echo "==> Starting nginx with the throwaway certificate..."
 $COMPOSE up -d frontend
 
+echo "==> Deleting the throwaway certificate..."
+# The dummy cert above was written directly (mkdir + openssl), not through certbot's own
+# lineage-tracking mechanism (which stores a matching config under /etc/letsencrypt/renewal/ and
+# real cert data under /etc/letsencrypt/archive/). Left in place, certbot finds
+# /etc/letsencrypt/live/$DOMAIN already occupied but doesn't recognize it as a lineage it manages,
+# and refuses to proceed - "Error creating new certificate lineage: live directory exists for
+# $DOMAIN" - even with --force-renewal, since that flag only affects renewing a lineage certbot
+# already knows about, not this case.
+$COMPOSE run --rm --entrypoint sh frontend -c "
+  rm -rf /etc/letsencrypt/live/$DOMAIN /etc/letsencrypt/archive/$DOMAIN /etc/letsencrypt/renewal/$DOMAIN.conf
+"
+
 echo "==> Requesting the real certificate from Let's Encrypt for $DOMAIN and www.$DOMAIN..."
 $COMPOSE run --rm --entrypoint certbot certbot certonly \
   --webroot -w /var/www/certbot \

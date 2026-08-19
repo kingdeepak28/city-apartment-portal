@@ -1,3 +1,5 @@
+// Author: deepak.maheshwari
+
 package com.societyportal.backend.exception;
 
 import jakarta.validation.ConstraintViolationException;

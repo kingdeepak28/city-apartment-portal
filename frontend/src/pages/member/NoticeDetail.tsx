@@ -1,3 +1,5 @@
+// Author: deepak.maheshwari
+
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import api from "../../api/client";
@@ -82,7 +84,14 @@ export default function NoticeDetail() {
       {preview && (
         <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/50 p-4 print:hidden" onClick={() => setPreview(null)}>
           <div className="h-[85vh] w-full max-w-4xl rounded-lg bg-white p-2" onClick={(e) => e.stopPropagation()}>
-            <div className="flex justify-end p-1">
+            <div className="flex items-center justify-between p-1">
+              {/* iOS Safari can't render a multi-page PDF's scrolling/pagination inside an
+                  <iframe> - it just flattens to a static first page, no way to reach the rest.
+                  Opening the same signed URL as a direct top-level navigation instead gets
+                  Safari's full native PDF viewer, so this is the fallback for that case. */}
+              <a href={preview} target="_blank" rel="noopener noreferrer" className="text-sm text-brand-600 hover:underline">
+                Open in new tab ↗
+              </a>
               <button className="text-slate-400 hover:text-slate-700" onClick={() => setPreview(null)}>
                 ✕
               </button>

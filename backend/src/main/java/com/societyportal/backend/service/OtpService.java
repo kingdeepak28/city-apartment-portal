@@ -1,3 +1,5 @@
+// Author: deepak.maheshwari
+
 package com.societyportal.backend.service;
 
 import com.societyportal.backend.domain.OtpToken;
@@ -36,7 +38,7 @@ public class OtpService {
                 .build();
         otpTokenRepository.save(token);
 
-        String message = "Your Society Document Portal OTP is " + otp + ". It is valid for " + ttlMinutes + " minutes.";
+        String message = "Your City Apartment Portal OTP is " + otp + ". It is valid for " + ttlMinutes + " minutes.";
         if (contact.contains("@")) {
             emailService.send(contact, "Your verification OTP", message);
         } else {

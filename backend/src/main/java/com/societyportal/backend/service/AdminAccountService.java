@@ -1,3 +1,5 @@
+// Author: deepak.maheshwari
+
 package com.societyportal.backend.service;
 
 import com.societyportal.backend.domain.AdminUser;
@@ -55,7 +57,7 @@ public class AdminAccountService {
                 .build();
         admin = adminUserRepository.save(admin);
         auditService.log("ADMIN_ACCOUNT", "CREATE", admin.getId().toString(), null, req.getRole());
-        emailService.send(admin.getEmail(), "Your Society Document Portal admin account",
+        emailService.send(admin.getEmail(), "Your City Apartment Portal admin account",
                 "An admin account has been created for you. Temporary password: " + password + ". Please log in and change it immediately.");
         return toSummary(admin);
     }

@@ -1,3 +1,5 @@
+// Author: deepak.maheshwari
+
 package com.societyportal.backend.exception;
 
 import org.springframework.http.HttpStatus;

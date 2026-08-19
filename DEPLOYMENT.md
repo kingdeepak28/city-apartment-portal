@@ -4,6 +4,11 @@ Deploys the full stack (Postgres + Spring Boot backend + React frontend) behind 
 Let's Encrypt certificate, using Docker Compose. Sized and documented for **city-apartments.in**
 serving up to ~4,000 registered residents.
 
+Written for a plain Ubuntu/Debian server. **On a GoDaddy VPS**, see
+**[DEPLOYMENT-GODADDY.md](DEPLOYMENT-GODADDY.md)** first for GoDaddy's own dashboard steps
+(getting VPS access, pointing DNS at it) - it hands off back to this doc for the actual server
+setup, which needs nothing GoDaddy-specific changed once you're on Ubuntu 24.04.
+
 ## 1. Server sizing
 
 4,000 *registered* users is not a high-traffic workload - real concurrency (people actively

@@ -1,3 +1,5 @@
+// Author: deepak.maheshwari
+
 package com.societyportal.backend.service;
 
 import com.societyportal.backend.domain.User;
@@ -25,6 +27,10 @@ public class ProfileService {
     private final AuditService auditService;
     private final AuditLogRepository auditLogRepository;
 
+    // Stricter than the app-wide app.file-storage.max-file-size-mb default (25MB) - a profile
+    // photo is a small headshot image, not a scanned document.
+    private static final long PHOTO_MAX_SIZE_BYTES = 2L * 1024 * 1024;
+
     public ProfileDtos.ProfileResponse myProfile() {
         User user = userRepository.findById(CurrentUser.get().getId())
                 .orElseThrow(() -> ApiException.notFound("Profile not found"));
@@ -49,7 +55,7 @@ public class ProfileService {
     public void updatePhoto(MultipartFile photo) {
         User user = userRepository.findById(CurrentUser.get().getId())
                 .orElseThrow(() -> ApiException.notFound("Profile not found"));
-        var stored = fileStorageService.store(photo, "profile-photos");
+        var stored = fileStorageService.store(photo, "profile-photos", PHOTO_MAX_SIZE_BYTES);
         user.setPhotoPath(stored.relativePath());
         userRepository.save(user);
     }

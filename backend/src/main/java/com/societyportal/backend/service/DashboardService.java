@@ -1,3 +1,5 @@
+// Author: deepak.maheshwari
+
 package com.societyportal.backend.service;
 
 import com.societyportal.backend.domain.Document;
@@ -117,7 +119,7 @@ public class DashboardService {
                 .findFirst().orElse(null);
 
         return DashboardDtos.MemberDashboardResponse.builder()
-                .memberName(user.getName()).flatNo(user.getFlatNo())
+                .memberName(user.getName()).flatNo(user.getFlatNo()).block(user.getBlock())
                 .unreadNotificationCount(notificationService.unreadCount(user.getId()))
                 .latestNotices(latestNotices).recentReports(recentReports)
                 .pinnedNotice(pinned)
