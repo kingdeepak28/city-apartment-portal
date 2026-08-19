@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import api from "../../api/client";
 import { DocumentDetail } from "../../api/types";
-import { formatBytes, formatDate, Spinner } from "../../components/ui";
+import { AsyncButton, formatBytes, formatDate, Spinner } from "../../components/ui";
 
 export default function ReportDetail() {
   const { id } = useParams();
@@ -64,9 +64,9 @@ export default function ReportDetail() {
           <div className="mb-2 flex items-center justify-between">
             <h2 className="font-semibold">Attachments</h2>
             {doc.files.length > 1 && (
-              <button className="btn-secondary btn-sm" onClick={downloadAll}>
+              <AsyncButton className="btn-secondary btn-sm" onClick={downloadAll}>
                 Download All (ZIP)
-              </button>
+              </AsyncButton>
             )}
           </div>
           <ul className="divide-y divide-slate-100 rounded-md border border-slate-200">
@@ -75,12 +75,12 @@ export default function ReportDetail() {
                 <span>{f.fileName}</span>
                 <span className="flex items-center gap-3 text-xs text-slate-400">
                   {formatBytes(f.fileSize)}
-                  <button className="text-brand-600 hover:underline" onClick={() => openPreview(f.id)}>
+                  <AsyncButton className="inline-flex items-center gap-1 text-brand-600 hover:underline" onClick={() => openPreview(f.id)}>
                     Preview
-                  </button>
-                  <button className="text-brand-600 hover:underline" onClick={() => download(f.id, f.fileName)}>
+                  </AsyncButton>
+                  <AsyncButton className="inline-flex items-center gap-1 text-brand-600 hover:underline" onClick={() => download(f.id, f.fileName)}>
                     Download
-                  </button>
+                  </AsyncButton>
                 </span>
               </li>
             ))}

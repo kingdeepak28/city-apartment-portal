@@ -3,7 +3,7 @@
 import { FormEvent, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import api, { apiErrorMessage } from "../../api/client";
-import { Footer } from "../../components/ui";
+import { ButtonSpinner, Footer } from "../../components/ui";
 
 export default function ResetPassword() {
   const [params] = useSearchParams();
@@ -11,16 +11,19 @@ export default function ResetPassword() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [done, setDone] = useState(false);
+  const [busy, setBusy] = useState(false);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError("");
+    setBusy(true);
     try {
       await api.post("/auth/reset-password", { token: params.get("token"), newPassword: password });
       setDone(true);
       setTimeout(() => navigate("/login"), 2000);
     } catch (err) {
       setError(apiErrorMessage(err));
+      setBusy(false);
     }
   }
 
@@ -44,7 +47,10 @@ export default function ResetPassword() {
                 required
               />
             </div>
-            <button className="btn-primary w-full">Reset Password</button>
+            <button className="btn-primary w-full" disabled={busy}>
+              {busy && <ButtonSpinner />}
+              Reset Password
+            </button>
           </form>
         )}
         <p className="mt-6 text-center text-sm text-slate-500">

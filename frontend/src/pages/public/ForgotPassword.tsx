@@ -3,21 +3,25 @@
 import { FormEvent, useState } from "react";
 import { Link } from "react-router-dom";
 import api, { apiErrorMessage } from "../../api/client";
-import { Footer } from "../../components/ui";
+import { ButtonSpinner, Footer } from "../../components/ui";
 
 export default function ForgotPassword() {
   const [identifier, setIdentifier] = useState("");
   const [sent, setSent] = useState(false);
   const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError("");
+    setBusy(true);
     try {
       await api.post("/auth/forgot-password", { identifier });
       setSent(true);
     } catch (err) {
       setError(apiErrorMessage(err));
+    } finally {
+      setBusy(false);
     }
   }
 
@@ -36,7 +40,10 @@ export default function ForgotPassword() {
               <label className="label">Registered Email or Mobile</label>
               <input className="input" value={identifier} onChange={(e) => setIdentifier(e.target.value)} required />
             </div>
-            <button className="btn-primary w-full">Send Reset Link</button>
+            <button className="btn-primary w-full" disabled={busy}>
+              {busy && <ButtonSpinner />}
+              Send Reset Link
+            </button>
           </form>
         )}
         <p className="mt-6 text-center text-sm text-slate-500">

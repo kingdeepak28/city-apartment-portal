@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import api, { apiErrorMessage } from "../../api/client";
 import { CategoryResponse, DocumentListItem, Page } from "../../api/types";
-import { Badge, formatDate, Pagination, Spinner, statusColor } from "../../components/ui";
+import { AsyncButton, Badge, formatDate, Pagination, Spinner, statusColor } from "../../components/ui";
 import { useToast } from "../../context/ToastContext";
 
 export default function Notices() {
@@ -103,15 +103,15 @@ export default function Notices() {
         </select>
         {selected.size > 0 && (
           <div className="ml-auto flex gap-2">
-            <button className="btn-primary btn-sm" onClick={() => bulk("publish")}>
+            <AsyncButton className="btn-primary btn-sm" onClick={() => bulk("publish")}>
               Publish {selected.size}
-            </button>
-            <button className="btn-secondary btn-sm" onClick={() => bulk("archive")}>
+            </AsyncButton>
+            <AsyncButton className="btn-secondary btn-sm" onClick={() => bulk("archive")}>
               Archive
-            </button>
-            <button className="btn-danger btn-sm" onClick={() => bulk("delete")}>
+            </AsyncButton>
+            <AsyncButton className="btn-danger btn-sm" onClick={() => bulk("delete")}>
               Delete
-            </button>
+            </AsyncButton>
           </div>
         )}
       </div>
@@ -165,23 +165,23 @@ export default function Notices() {
                   <td className="p-3">
                     <div className="flex flex-wrap justify-end gap-1.5">
                       {d.status !== "PUBLISHED" && (
-                        <button className="btn-primary btn-sm" onClick={() => quickAction(d.id, "publish")}>
+                        <AsyncButton className="btn-primary btn-sm" onClick={() => quickAction(d.id, "publish")}>
                           Publish
-                        </button>
+                        </AsyncButton>
                       )}
                       {d.status === "PUBLISHED" && (
                         <>
                           <Link to={`/admin/notices/${d.id}/read-report`} className="btn-secondary btn-sm">
                             Read Report
                           </Link>
-                          <button className="btn-secondary btn-sm" onClick={() => quickAction(d.id, "archive")}>
+                          <AsyncButton className="btn-secondary btn-sm" onClick={() => quickAction(d.id, "archive")}>
                             Archive
-                          </button>
+                          </AsyncButton>
                         </>
                       )}
-                      <button className="btn-danger btn-sm" onClick={() => remove(d.id)}>
+                      <AsyncButton className="btn-danger btn-sm" onClick={() => remove(d.id)}>
                         Delete
-                      </button>
+                      </AsyncButton>
                     </div>
                   </td>
                 </tr>

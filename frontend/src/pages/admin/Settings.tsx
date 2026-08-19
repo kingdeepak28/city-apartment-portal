@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import api, { apiErrorMessage } from "../../api/client";
-import { Spinner } from "../../components/ui";
+import { ButtonSpinner, Spinner } from "../../components/ui";
 import { useToast } from "../../context/ToastContext";
 import { useAuth } from "../../context/AuthContext";
 
@@ -68,6 +68,7 @@ export default function Settings() {
         {!readOnly && (
           <div className="flex justify-end border-t border-slate-100 pt-4">
             <button className="btn-primary" disabled={busy} onClick={save}>
+              {busy && <ButtonSpinner />}
               Save Settings
             </button>
           </div>

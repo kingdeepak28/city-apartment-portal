@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import api, { apiErrorMessage } from "../../api/client";
 import { Page } from "../../api/types";
-import { Badge, formatDateTime, Pagination, Spinner, statusColor } from "../../components/ui";
+import { AsyncButton, Badge, formatDateTime, Pagination, Spinner, statusColor } from "../../components/ui";
 import { useToast } from "../../context/ToastContext";
 
 interface LogItem {
@@ -73,9 +73,9 @@ export default function NotificationLog() {
                   </td>
                   <td className="p-3 text-xs text-slate-500">{formatDateTime(n.sentAt)}</td>
                   <td className="p-3 text-right">
-                    <button className="btn-secondary btn-sm" onClick={() => resend(n.id)}>
+                    <AsyncButton className="btn-secondary btn-sm" onClick={() => resend(n.id)}>
                       Resend Failed
-                    </button>
+                    </AsyncButton>
                   </td>
                 </tr>
               ))}

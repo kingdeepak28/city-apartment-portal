@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import api, { apiErrorMessage } from "../../api/client";
 import { Page, UserSummary } from "../../api/types";
-import { Badge, formatDateTime, Modal, Pagination, Spinner } from "../../components/ui";
+import { AsyncButton, Badge, formatDateTime, Modal, Pagination, Spinner } from "../../components/ui";
 import { useToast } from "../../context/ToastContext";
 
 const REJECTION_REASONS = ["Invalid proof", "Not a resident", "Duplicate account", "Incomplete details", "Other"];
@@ -140,9 +140,9 @@ export default function Approvals() {
         </select>
         {selected.size > 0 && (
           <div className="ml-auto flex gap-2">
-            <button className="btn-primary btn-sm" onClick={bulkApprove}>
+            <AsyncButton className="btn-primary btn-sm" onClick={bulkApprove}>
               Approve {selected.size}
-            </button>
+            </AsyncButton>
             <button className="btn-danger btn-sm" onClick={() => setRejectModal({ bulk: true })}>
               Reject {selected.size}
             </button>
@@ -201,9 +201,9 @@ export default function Approvals() {
                   </td>
                   <td className="p-3">
                     <div className="flex justify-end gap-1.5">
-                      <button className="btn-primary btn-sm" onClick={() => approve(u.id)}>
+                      <AsyncButton className="btn-primary btn-sm" onClick={() => approve(u.id)}>
                         Approve
-                      </button>
+                      </AsyncButton>
                       <button className="btn-secondary btn-sm" onClick={() => setInfoModal(u)}>
                         Info
                       </button>
@@ -260,9 +260,9 @@ export default function Approvals() {
               <button className="btn-secondary" onClick={() => setRejectModal(null)}>
                 Cancel
               </button>
-              <button className="btn-danger" onClick={submitReject}>
+              <AsyncButton className="btn-danger" onClick={submitReject}>
                 Reject
-              </button>
+              </AsyncButton>
             </div>
           </div>
         </Modal>
@@ -279,9 +279,9 @@ export default function Approvals() {
               <button className="btn-secondary" onClick={() => setInfoModal(null)}>
                 Cancel
               </button>
-              <button className="btn-primary" onClick={submitInfoRequest}>
+              <AsyncButton className="btn-primary" onClick={submitInfoRequest}>
                 Send Request
-              </button>
+              </AsyncButton>
             </div>
           </div>
         </Modal>

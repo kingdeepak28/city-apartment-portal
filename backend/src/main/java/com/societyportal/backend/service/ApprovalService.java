@@ -99,7 +99,7 @@ public class ApprovalService {
         auditService.log("APPROVAL", "APPROVE", user.getId().toString(), UserStatus.PENDING, UserStatus.ACTIVE);
         notificationService.notifyMembers(List.of(user), NotificationType.REGISTRATION_APPROVED,
                 "Your registration has been approved",
-                "Welcome to the City Apartment Portal! You can now log in using your registered email/mobile.",
+                "Welcome to the City Apartments Portal! You can now log in using your registered email/mobile.",
                 "/login", true, null);
     }
 

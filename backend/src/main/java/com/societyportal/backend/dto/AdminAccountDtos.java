@@ -33,6 +33,18 @@ public class AdminAccountDtos {
     }
 
     @Data
+    public static class DemoteToUserRequest {
+        @NotBlank
+        private String flatNo;
+        @NotBlank
+        private String block;
+        @NotBlank
+        private String residentType; // OWNER / TENANT
+        // Optional: only required if this admin account has no mobile number on file.
+        private String mobile;
+    }
+
+    @Data
     @NoArgsConstructor
     @AllArgsConstructor
     public static class AdminSummary {

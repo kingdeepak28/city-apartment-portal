@@ -158,7 +158,7 @@ public class AuthService {
                 .expiresAt(OffsetDateTime.now().plusMinutes(30)).used(false).build());
 
         String link = frontendUrl + "/reset-password?token=" + token;
-        emailService.send(email, "Reset your City Apartment Portal password",
+        emailService.send(email, "Reset your City Apartments Portal password",
                 "Click the link below to reset your password (valid for 30 minutes):<br/><a href=\"" + link + "\">" + link + "</a>");
     }
 

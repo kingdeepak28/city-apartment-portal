@@ -38,7 +38,7 @@ public class OtpService {
                 .build();
         otpTokenRepository.save(token);
 
-        String message = "Your City Apartment Portal OTP is " + otp + ". It is valid for " + ttlMinutes + " minutes.";
+        String message = "Your City Apartments Portal OTP is " + otp + ". It is valid for " + ttlMinutes + " minutes.";
         if (contact.contains("@")) {
             emailService.send(contact, "Your verification OTP", message);
         } else {

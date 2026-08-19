@@ -6,7 +6,7 @@ import api, { apiErrorMessage } from "../../api/client";
 import { CategoryResponse, DocumentDetail } from "../../api/types";
 import FileDrop from "../../components/FileDrop";
 import RichTextEditor from "../../components/RichTextEditor";
-import { Spinner } from "../../components/ui";
+import { ButtonSpinner, Spinner } from "../../components/ui";
 import { useToast } from "../../context/ToastContext";
 
 // <input type="datetime-local"> both displays and submits a timezone-less "local wall clock"
@@ -201,9 +201,11 @@ export default function NoticeForm() {
             Cancel
           </button>
           <button className="btn-secondary" disabled={busy} onClick={() => save(false)}>
+            {busy && <ButtonSpinner />}
             Save as Draft
           </button>
           <button className="btn-primary" disabled={busy} onClick={() => save(true)}>
+            {busy && <ButtonSpinner />}
             Publish
           </button>
         </div>

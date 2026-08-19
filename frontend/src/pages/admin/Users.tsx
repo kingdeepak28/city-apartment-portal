@@ -3,11 +3,13 @@
 import { useEffect, useState } from "react";
 import api, { apiErrorMessage } from "../../api/client";
 import { Page, UserSummary } from "../../api/types";
-import { Badge, formatDate, formatDateTime, Modal, Pagination, Spinner, statusColor } from "../../components/ui";
+import { AsyncButton, Badge, ButtonSpinner, formatDate, formatDateTime, Modal, Pagination, Spinner, statusColor } from "../../components/ui";
 import { useToast } from "../../context/ToastContext";
+import { useAuth } from "../../context/AuthContext";
 
 export default function Users() {
   const { notify } = useToast();
+  const { user: currentUser } = useAuth();
   const [data, setData] = useState<Page<UserSummary> | null>(null);
   const [page, setPage] = useState(0);
   const [status, setStatus] = useState("");
@@ -16,6 +18,7 @@ export default function Users() {
   const [createOpen, setCreateOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
   const [detailUser, setDetailUser] = useState<UserSummary | null>(null);
+  const [promoteUser, setPromoteUser] = useState<UserSummary | null>(null);
 
   async function load() {
     setLoading(true);
@@ -52,6 +55,17 @@ export default function Users() {
     }
   }
 
+  async function promoteToAdmin(id: string, role: string) {
+    try {
+      await api.post(`/admin/users/${id}/promote-to-admin`, { role });
+      notify("User promoted to admin", "success");
+      setPromoteUser(null);
+      load();
+    } catch (err) {
+      notify(apiErrorMessage(err), "error");
+    }
+  }
+
   async function triggerReset(id: string) {
     try {
       await api.post(`/admin/users/${id}/trigger-password-reset`);
@@ -75,9 +89,9 @@ export default function Users() {
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold">Users</h1>
         <div className="flex gap-2">
-          <button className="btn-secondary" onClick={exportUsers}>
+          <AsyncButton className="btn-secondary" onClick={exportUsers}>
             Export Excel
-          </button>
+          </AsyncButton>
           <button className="btn-secondary" onClick={() => setImportOpen(true)}>
             Bulk Import
           </button>
@@ -137,21 +151,26 @@ export default function Users() {
                   <td className="p-3">
                     <div className="flex justify-end gap-1.5">
                       {u.status === "ACTIVE" && (
-                        <button className="btn-secondary btn-sm" onClick={() => updateStatus(u.id, "SUSPENDED")}>
+                        <AsyncButton className="btn-secondary btn-sm" onClick={() => updateStatus(u.id, "SUSPENDED")}>
                           Suspend
-                        </button>
+                        </AsyncButton>
                       )}
                       {u.status === "SUSPENDED" && (
-                        <button className="btn-primary btn-sm" onClick={() => updateStatus(u.id, "ACTIVE")}>
+                        <AsyncButton className="btn-primary btn-sm" onClick={() => updateStatus(u.id, "ACTIVE")}>
                           Reactivate
+                        </AsyncButton>
+                      )}
+                      <AsyncButton className="btn-secondary btn-sm" onClick={() => triggerReset(u.id)}>
+                        Reset PW
+                      </AsyncButton>
+                      {currentUser?.role === "SUPER_ADMIN" && u.status === "ACTIVE" && (
+                        <button className="btn-secondary btn-sm" onClick={() => setPromoteUser(u)}>
+                          Make Admin
                         </button>
                       )}
-                      <button className="btn-secondary btn-sm" onClick={() => triggerReset(u.id)}>
-                        Reset PW
-                      </button>
-                      <button className="btn-danger btn-sm" onClick={() => deleteUser(u.id, u.name)}>
+                      <AsyncButton className="btn-danger btn-sm" onClick={() => deleteUser(u.id, u.name)}>
                         Delete
-                      </button>
+                      </AsyncButton>
                     </div>
                   </td>
                 </tr>
@@ -203,6 +222,10 @@ export default function Users() {
           </dl>
         </Modal>
       )}
+
+      {promoteUser && (
+        <PromoteModal user={promoteUser} onClose={() => setPromoteUser(null)} onConfirm={promoteToAdmin} />
+      )}
     </div>
   );
 }
@@ -213,6 +236,46 @@ function Row({ label, value }: { label: string; value: string }) {
       <dt className="text-slate-500">{label}</dt>
       <dd className="font-medium">{value}</dd>
     </div>
+  );
+}
+
+function PromoteModal({
+  user,
+  onClose,
+  onConfirm,
+}: {
+  user: UserSummary;
+  onClose: () => void;
+  onConfirm: (id: string, role: string) => void;
+}) {
+  const [role, setRole] = useState("ADMIN");
+
+  return (
+    <Modal title={`Make ${user.name} an Admin`} onClose={onClose}>
+      <div className="space-y-3">
+        <p className="text-sm text-slate-600">
+          This moves {user.name} from Users to the admin console with the role below, using their existing
+          password. Their member account (Flat {user.flatNo} / {user.block}) will be removed - an identity
+          can't be both a member and an admin at the same time.
+        </p>
+        <div>
+          <label className="label">Admin Role</label>
+          <select className="input" value={role} onChange={(e) => setRole(e.target.value)}>
+            <option value="ADMIN">Admin</option>
+            <option value="UPLOADER">Uploader</option>
+            <option value="SUPER_ADMIN">Super Admin</option>
+          </select>
+        </div>
+        <div className="flex justify-end gap-2">
+          <button className="btn-secondary" onClick={onClose}>
+            Cancel
+          </button>
+          <AsyncButton className="btn-primary" onClick={() => onConfirm(user.id, role)}>
+            Confirm
+          </AsyncButton>
+        </div>
+      </div>
+    </Modal>
   );
 }
 
@@ -273,6 +336,7 @@ function CreateUserModal({ onClose, onCreated }: { onClose: () => void; onCreate
             Cancel
           </button>
           <button className="btn-primary" disabled={busy} onClick={submit}>
+            {busy && <ButtonSpinner />}
             Create
           </button>
         </div>
@@ -327,6 +391,7 @@ function BulkImportModal({ onClose, onDone }: { onClose: () => void; onDone: () 
         </button>
         {!result && (
           <button className="btn-primary" disabled={!file || busy} onClick={submit}>
+            {busy && <ButtonSpinner />}
             Import
           </button>
         )}

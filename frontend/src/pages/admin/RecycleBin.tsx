@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import api, { apiErrorMessage } from "../../api/client";
 import { Page } from "../../api/types";
-import { Badge, formatDateTime, Pagination, Spinner } from "../../components/ui";
+import { AsyncButton, Badge, formatDateTime, Pagination, Spinner } from "../../components/ui";
 import { useToast } from "../../context/ToastContext";
 import { useAuth } from "../../context/AuthContext";
 
@@ -84,13 +84,13 @@ export default function RecycleBin() {
                   <td className="p-3 text-xs text-slate-500">{formatDateTime(d.purgeEligibleAfter)}</td>
                   <td className="p-3">
                     <div className="flex justify-end gap-1.5">
-                      <button className="btn-primary btn-sm" onClick={() => restore(d.id)}>
+                      <AsyncButton className="btn-primary btn-sm" onClick={() => restore(d.id)}>
                         Restore
-                      </button>
+                      </AsyncButton>
                       {user?.role === "SUPER_ADMIN" && (
-                        <button className="btn-danger btn-sm" onClick={() => permanentDelete(d.id)}>
+                        <AsyncButton className="btn-danger btn-sm" onClick={() => permanentDelete(d.id)}>
                           Delete Permanently
-                        </button>
+                        </AsyncButton>
                       )}
                     </div>
                   </td>

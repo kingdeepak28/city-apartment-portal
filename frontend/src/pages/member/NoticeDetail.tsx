@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import api from "../../api/client";
 import { DocumentDetail } from "../../api/types";
-import { Badge, formatBytes, formatDate, Spinner } from "../../components/ui";
+import { AsyncButton, Badge, formatBytes, formatDate, Spinner } from "../../components/ui";
 
 export default function NoticeDetail() {
   const { id } = useParams();
@@ -67,12 +67,12 @@ export default function NoticeDetail() {
                   <span>{f.fileName}</span>
                   <span className="flex items-center gap-3 text-xs text-slate-400">
                     {formatBytes(f.fileSize)}
-                    <button className="text-brand-600 hover:underline" onClick={() => openPreview(f.id)}>
+                    <AsyncButton className="inline-flex items-center gap-1 text-brand-600 hover:underline" onClick={() => openPreview(f.id)}>
                       Preview
-                    </button>
-                    <button className="text-brand-600 hover:underline" onClick={() => download(f.id, f.fileName)}>
+                    </AsyncButton>
+                    <AsyncButton className="inline-flex items-center gap-1 text-brand-600 hover:underline" onClick={() => download(f.id, f.fileName)}>
                       Download
-                    </button>
+                    </AsyncButton>
                   </span>
                 </li>
               ))}

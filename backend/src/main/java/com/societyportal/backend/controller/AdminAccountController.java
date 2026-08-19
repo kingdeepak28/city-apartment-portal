@@ -58,4 +58,10 @@ public class AdminAccountController {
         adminAccountService.delete(id);
         return ResponseEntity.ok(Map.of("message", "Admin account deleted"));
     }
+
+    @PostMapping("/{id}/demote-to-user")
+    public ResponseEntity<Map<String, String>> demoteToUser(@PathVariable UUID id, @Valid @RequestBody AdminAccountDtos.DemoteToUserRequest req) {
+        adminAccountService.demoteToUser(id, req);
+        return ResponseEntity.ok(Map.of("message", "Admin converted to a member account"));
+    }
 }

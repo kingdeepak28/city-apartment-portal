@@ -4,7 +4,7 @@ import { FormEvent, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { apiErrorMessage } from "../../api/client";
-import { Footer } from "../../components/ui";
+import { ButtonSpinner, Footer } from "../../components/ui";
 
 export default function Login() {
   const { login } = useAuth();
@@ -31,7 +31,7 @@ export default function Login() {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-brand-50 to-slate-100 px-4">
       <div className="card w-full max-w-md p-8">
-        <h1 className="text-xl font-bold text-brand-700">City Apartment Portal</h1>
+        <h1 className="text-xl font-bold text-brand-700">City Apartments Portal</h1>
         <p className="mt-1 text-sm text-slate-500">Sign in to continue</p>
 
         {error && <div className="mt-4 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">{error}</div>}
@@ -57,6 +57,7 @@ export default function Login() {
             </Link>
           </div>
           <button className="btn-primary w-full" disabled={loading}>
+            {loading && <ButtonSpinner />}
             {loading ? "Signing in..." : "Sign In"}
           </button>
         </form>

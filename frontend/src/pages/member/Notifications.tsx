@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api, { apiErrorMessage } from "../../api/client";
 import { NotificationItem, Page } from "../../api/types";
-import { formatDateTime, Spinner } from "../../components/ui";
+import { AsyncButton, formatDateTime, Spinner } from "../../components/ui";
 import { useToast } from "../../context/ToastContext";
 
 const TYPE_ICON: Record<string, string> = {
@@ -80,9 +80,9 @@ export default function Notifications() {
           <button className="btn-secondary btn-sm" onClick={() => setShowPrefs((s) => !s)}>
             Preferences
           </button>
-          <button className="btn-secondary btn-sm" onClick={markAllRead}>
+          <AsyncButton className="btn-secondary btn-sm" onClick={markAllRead}>
             Mark all as read
-          </button>
+          </AsyncButton>
         </div>
       </div>
 
@@ -120,9 +120,9 @@ export default function Notifications() {
             </tbody>
           </table>
           <div className="flex justify-end">
-            <button className="btn-primary btn-sm" onClick={savePrefs}>
+            <AsyncButton className="btn-primary btn-sm" onClick={savePrefs}>
               Save Preferences
-            </button>
+            </AsyncButton>
           </div>
         </div>
       )}
@@ -150,9 +150,9 @@ export default function Notifications() {
                   <div className="mt-1 text-xs text-slate-400">{formatDateTime(n.createdAt)}</div>
                 </div>
               </div>
-              <button className="shrink-0 text-xs text-slate-400 hover:text-red-500" onClick={(e) => remove(n.id, e)}>
+              <AsyncButton className="shrink-0 text-xs text-slate-400 hover:text-red-500" onClick={(e) => remove(n.id, e)}>
                 Delete
-              </button>
+              </AsyncButton>
             </div>
           ))}
           {data?.content.length === 0 && <p className="p-12 text-center text-slate-400">No notifications</p>}

@@ -2,7 +2,10 @@
 
 package com.societyportal.backend.service;
 
+import com.societyportal.backend.domain.AdminUser;
 import com.societyportal.backend.domain.User;
+import com.societyportal.backend.domain.enums.AdminRole;
+import com.societyportal.backend.domain.enums.AdminStatus;
 import com.societyportal.backend.domain.enums.NotificationType;
 import com.societyportal.backend.domain.enums.ResidentType;
 import com.societyportal.backend.domain.enums.UserStatus;
@@ -46,6 +49,7 @@ public class UserAdminService {
     private final PasswordEncoder passwordEncoder;
     private final AuditService auditService;
     private final NotificationService notificationService;
+    private final EmailService emailService;
     private static final SecureRandom RANDOM = new SecureRandom();
     private static final List<String> CSV_HEADERS =
             List.of("name", "flatNo", "block", "residentType", "mobile", "email");
@@ -107,7 +111,7 @@ public class UserAdminService {
         user = userRepository.save(user);
         auditService.log("USER", "ADMIN_CREATED", user.getId().toString(), null, null);
         notificationService.notifyMembers(List.of(user), NotificationType.REGISTRATION_APPROVED,
-                "Your City Apartment Portal account is ready",
+                "Your City Apartments Portal account is ready",
                 "An account has been created for you. Temporary password: " + password
                         + " - please log in and change it immediately.",
                 "/login", true, null);
@@ -199,7 +203,7 @@ public class UserAdminService {
         if (newStatus == UserStatus.SUSPENDED) {
             notificationService.notifyMembers(List.of(user), NotificationType.ACCOUNT_SUSPENDED,
                     "Your account has been suspended",
-                    "Your access to the City Apartment Portal has been suspended by the administrator.",
+                    "Your access to the City Apartments Portal has been suspended by the administrator.",
                     "/login", true, null);
         }
     }
@@ -209,6 +213,47 @@ public class UserAdminService {
         User user = getOrThrow(userId);
         userRepository.delete(user);
         auditService.log("USER", "DELETE", userId.toString(), user.getStatus(), null);
+    }
+
+    /**
+     * Promotes a member to an admin-panel account (Super Admin / Admin / Uploader).
+     * <p>
+     * This can't just add a role flag to the existing {@link User} row - admins and members are
+     * deliberately separate tables (see {@link AdminUser}'s class comment), and {@code
+     * AuthService.login} resolves a login identifier against {@code admin_users} first. Leaving
+     * the old member row in place after also creating an admin row with the same email/mobile
+     * would recreate the exact dual-identity bug fixed elsewhere in this codebase (see
+     * RegistrationService.checkDuplicate / AdminAccountService.create): the member row would
+     * become permanently unreachable via login, silently, since the admin row always wins.
+     * So this deletes the member row in the same transaction that creates the admin one - the
+     * person ends up with exactly one account, now an admin one, keeping their existing password
+     * so they don't need a fresh temporary one.
+     */
+    @Transactional
+    public void promoteToAdmin(UUID userId, String role) {
+        User user = getOrThrow(userId);
+        AdminRole adminRole = AdminRole.valueOf(role.toUpperCase());
+
+        if (adminUserRepository.existsByEmailIgnoreCase(user.getEmail())) {
+            throw ApiException.conflict("An admin account with this email already exists");
+        }
+
+        AdminUser admin = AdminUser.builder()
+                .name(user.getName())
+                .email(user.getEmail())
+                .mobile(user.getMobile())
+                .passwordHash(user.getPasswordHash())
+                .role(adminRole)
+                .status(AdminStatus.ACTIVE)
+                .build();
+        admin = adminUserRepository.save(admin);
+
+        auditService.log("USER", "PROMOTED_TO_ADMIN", userId.toString(), user.getStatus(), adminRole);
+        userRepository.delete(user);
+
+        emailService.send(admin.getEmail(), "Your City Apartments Portal account has been made an admin",
+                "Your account has been promoted to an admin role (" + adminRole
+                        + "). Log in with your existing password to access the admin console.");
     }
 
     private String generateTempPassword() {

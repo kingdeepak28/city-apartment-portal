@@ -1,6 +1,6 @@
 // Author: deepak.maheshwari
 
-import { ReactNode } from "react";
+import { ButtonHTMLAttributes, MouseEvent, ReactNode, useState } from "react";
 
 export function Badge({ children, color = "slate" }: { children: ReactNode; color?: string }) {
   const map: Record<string, string> = {
@@ -64,6 +64,56 @@ export function Spinner() {
     <div className="flex justify-center py-8">
       <div className="h-6 w-6 animate-spin rounded-full border-2 border-slate-300 border-t-brand-600" />
     </div>
+  );
+}
+
+/** A small spinning circle sized for sitting inline next to a button's label. Uses
+ *  border-current so it automatically matches whatever text color the button already has
+ *  (white on btn-primary/btn-danger, slate on btn-secondary) with no per-variant styling.
+ *  Exported directly for form-level submit buttons that already track their own busy state
+ *  (see AsyncButton's doc comment for when to use which). */
+export function ButtonSpinner() {
+  return <span className="h-3.5 w-3.5 shrink-0 animate-spin rounded-full border-2 border-current border-t-transparent" />;
+}
+
+/**
+ * Drop-in replacement for <button> for anything whose onClick fires an async action (an API
+ * call). Tracks its own busy state - no per-page useState boilerplate needed - and shows
+ * ButtonSpinner + disables itself for the duration, so a slow action always gives feedback
+ * instead of leaving the user wondering whether their click registered.
+ *
+ * Only for onClick-driven actions. A <form onSubmit={...}> submit button's async work happens in
+ * the form handler, not a click handler here - those keep tracking busy state at the form level
+ * (already the existing pattern in this codebase) and just render ButtonSpinner directly instead.
+ */
+export function AsyncButton({
+  onClick,
+  children,
+  disabled,
+  type = "button",
+  ...rest
+}: {
+  onClick: (e: MouseEvent<HTMLButtonElement>) => unknown;
+} & Omit<ButtonHTMLAttributes<HTMLButtonElement>, "onClick">) {
+  const [busy, setBusy] = useState(false);
+
+  async function handleClick(e: MouseEvent<HTMLButtonElement>) {
+    const result = onClick(e);
+    if (result && typeof (result as PromiseLike<unknown>).then === "function") {
+      setBusy(true);
+      try {
+        await result;
+      } finally {
+        setBusy(false);
+      }
+    }
+  }
+
+  return (
+    <button type={type} disabled={disabled || busy} onClick={handleClick} {...rest}>
+      {busy && <ButtonSpinner />}
+      {children}
+    </button>
   );
 }
 

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import api, { apiErrorMessage } from "../../api/client";
-import { formatDateTime } from "../../components/ui";
+import { AsyncButton, formatDateTime } from "../../components/ui";
 import { useToast } from "../../context/ToastContext";
 
 interface ProfileResponse {
@@ -174,9 +174,9 @@ export default function Profile() {
           </div>
         </div>
         <div className="flex justify-end">
-          <button className="btn-primary" onClick={saveProfile}>
+          <AsyncButton className="btn-primary" onClick={saveProfile}>
             Save
-          </button>
+          </AsyncButton>
         </div>
       </div>
 
@@ -184,9 +184,9 @@ export default function Profile() {
         <h2 className="font-semibold">Request Correction to Flat/Resident Type</h2>
         <textarea className="input" rows={2} placeholder="Describe the correction needed..." value={correctionMsg} onChange={(e) => setCorrectionMsg(e.target.value)} />
         <div className="flex justify-end">
-          <button className="btn-secondary" disabled={!correctionMsg} onClick={sendCorrection}>
+          <AsyncButton className="btn-secondary" disabled={!correctionMsg} onClick={sendCorrection}>
             Send Request
-          </button>
+          </AsyncButton>
         </div>
       </div>
 
@@ -216,9 +216,9 @@ export default function Profile() {
           />
         </div>
         <div className="flex justify-end">
-          <button className="btn-primary" onClick={changePassword}>
+          <AsyncButton className="btn-primary" onClick={changePassword}>
             Change Password
-          </button>
+          </AsyncButton>
         </div>
       </div>
 

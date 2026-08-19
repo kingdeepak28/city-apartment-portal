@@ -103,6 +103,12 @@ public class UserDtos {
     }
 
     @Data
+    public static class PromoteToAdminRequest {
+        @NotBlank
+        private String role; // SUPER_ADMIN / ADMIN / UPLOADER
+    }
+
+    @Data
     @NoArgsConstructor
     @AllArgsConstructor
     public static class BulkImportResult {

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import api, { apiErrorMessage } from "../../api/client";
-import { Spinner } from "../../components/ui";
+import { AsyncButton, Spinner } from "../../components/ui";
 import { useToast } from "../../context/ToastContext";
 
 interface ReportData {
@@ -51,12 +51,12 @@ export default function NoticeReadReport() {
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold">Notice Read Report</h1>
         <div className="flex gap-2">
-          <button className="btn-secondary" onClick={exportExcel}>
+          <AsyncButton className="btn-secondary" onClick={exportExcel}>
             Export Excel
-          </button>
-          <button className="btn-primary" onClick={sendReminder}>
+          </AsyncButton>
+          <AsyncButton className="btn-primary" onClick={sendReminder}>
             Send Reminder to Unread
-          </button>
+          </AsyncButton>
         </div>
       </div>
 

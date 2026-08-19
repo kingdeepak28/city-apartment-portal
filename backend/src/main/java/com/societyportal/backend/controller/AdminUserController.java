@@ -78,6 +78,17 @@ public class AdminUserController {
         return ResponseEntity.ok(Map.of("message", "User deleted"));
     }
 
+    // SUPER_ADMIN only, tighter than this controller's own class-level rule: granting admin
+    // access is exactly the privilege AdminAccountController already restricts to SUPER_ADMIN for
+    // its own "create admin account" endpoint - a plain ADMIN must not get an indirect route
+    // around that restriction through the Users list.
+    @PostMapping("/{id}/promote-to-admin")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    public ResponseEntity<Map<String, String>> promoteToAdmin(@PathVariable UUID id, @Valid @RequestBody UserDtos.PromoteToAdminRequest req) {
+        userAdminService.promoteToAdmin(id, req.getRole());
+        return ResponseEntity.ok(Map.of("message", "User promoted to admin"));
+    }
+
     @PostMapping("/{id}/unlock")
     public ResponseEntity<Map<String, String>> unlock(@PathVariable UUID id) {
         authService.unlockAccount(id, false);

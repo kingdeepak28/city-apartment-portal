@@ -5,7 +5,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import api, { apiErrorMessage } from "../../api/client";
 import { CategoryResponse, DocumentDetail } from "../../api/types";
 import FileDrop from "../../components/FileDrop";
-import { formatBytes, formatDateTime, Spinner } from "../../components/ui";
+import { ButtonSpinner, formatBytes, formatDateTime, Spinner } from "../../components/ui";
 import { useToast } from "../../context/ToastContext";
 
 const BLOCKS_PLACEHOLDER = "A, B, C";
@@ -214,9 +214,11 @@ export default function ReportForm() {
             Cancel
           </button>
           <button className="btn-secondary" disabled={busy} onClick={() => save(false)}>
+            {busy && <ButtonSpinner />}
             Save as Draft
           </button>
           <button className="btn-primary" disabled={busy} onClick={() => save(true)}>
+            {busy && <ButtonSpinner />}
             Publish
           </button>
         </div>

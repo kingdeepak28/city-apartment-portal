@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import api, { apiErrorMessage } from "../../api/client";
 import { AdminSummary } from "../../api/types";
-import { Badge, formatDateTime, Modal, Spinner, statusColor } from "../../components/ui";
+import { AsyncButton, Badge, ButtonSpinner, formatDateTime, Modal, Spinner, statusColor } from "../../components/ui";
 import { useToast } from "../../context/ToastContext";
 
 export default function AdminAccounts() {
@@ -11,6 +11,7 @@ export default function AdminAccounts() {
   const [items, setItems] = useState<AdminSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [createOpen, setCreateOpen] = useState(false);
+  const [demoteAdmin, setDemoteAdmin] = useState<AdminSummary | null>(null);
 
   async function load() {
     setLoading(true);
@@ -79,11 +80,14 @@ export default function AdminAccounts() {
                   <td className="p-3 text-xs text-slate-500">{formatDateTime(a.lastLogin)}</td>
                   <td className="p-3">
                     <div className="flex justify-end gap-1.5">
-                      <button className="btn-secondary btn-sm" onClick={() => toggleStatus(a)}>
+                      <AsyncButton className="btn-secondary btn-sm" onClick={() => toggleStatus(a)}>
                         {a.status === "ACTIVE" ? "Suspend" : "Reactivate"}
-                      </button>
-                      <button className="btn-secondary btn-sm" onClick={() => unlock(a.id)}>
+                      </AsyncButton>
+                      <AsyncButton className="btn-secondary btn-sm" onClick={() => unlock(a.id)}>
                         Unlock
+                      </AsyncButton>
+                      <button className="btn-secondary btn-sm" onClick={() => setDemoteAdmin(a)}>
+                        Make Member
                       </button>
                     </div>
                   </td>
@@ -99,6 +103,17 @@ export default function AdminAccounts() {
           onClose={() => setCreateOpen(false)}
           onCreated={() => {
             setCreateOpen(false);
+            load();
+          }}
+        />
+      )}
+
+      {demoteAdmin && (
+        <DemoteModal
+          admin={demoteAdmin}
+          onClose={() => setDemoteAdmin(null)}
+          onDone={() => {
+            setDemoteAdmin(null);
             load();
           }}
         />
@@ -153,7 +168,73 @@ function CreateAdminModal({ onClose, onCreated }: { onClose: () => void; onCreat
             Cancel
           </button>
           <button className="btn-primary" disabled={busy} onClick={submit}>
+            {busy && <ButtonSpinner />}
             Create
+          </button>
+        </div>
+      </div>
+    </Modal>
+  );
+}
+
+function DemoteModal({ admin, onClose, onDone }: { admin: AdminSummary; onClose: () => void; onDone: () => void }) {
+  const { notify } = useToast();
+  // Admin accounts have no flat/block/resident-type at all, and mobile is optional there (unlike
+  // members, where it's required) - so unlike promoting a member to admin, this can't be a single
+  // click. Pre-fill mobile if this admin already has one; leave it editable either way.
+  const [form, setForm] = useState({ flatNo: "", block: "", residentType: "OWNER", mobile: admin.mobile || "" });
+  const [busy, setBusy] = useState(false);
+
+  async function submit() {
+    setBusy(true);
+    try {
+      await api.post(`/admin/admins/${admin.id}/demote-to-user`, form);
+      notify(`${admin.name} converted to a member account`, "success");
+      onDone();
+    } catch (err) {
+      notify(apiErrorMessage(err), "error");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <Modal title={`Make ${admin.name} a Member`} onClose={onClose}>
+      <div className="space-y-3">
+        <p className="text-sm text-slate-600">
+          This moves {admin.name} from Admin Accounts to Users as a regular member, using their existing
+          password. Their admin access ({admin.role}) will be removed - an identity can't be both an admin
+          and a member at the same time.
+        </p>
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="label">Flat No.</label>
+            <input className="input" value={form.flatNo} onChange={(e) => setForm({ ...form, flatNo: e.target.value })} />
+          </div>
+          <div>
+            <label className="label">Block</label>
+            <input className="input" value={form.block} onChange={(e) => setForm({ ...form, block: e.target.value })} />
+          </div>
+        </div>
+        <div>
+          <label className="label">Resident Type</label>
+          <select className="input" value={form.residentType} onChange={(e) => setForm({ ...form, residentType: e.target.value })}>
+            <option value="OWNER">Owner</option>
+            <option value="TENANT">Tenant</option>
+          </select>
+        </div>
+        <div>
+          <label className="label">Mobile</label>
+          <input className="input" value={form.mobile} onChange={(e) => setForm({ ...form, mobile: e.target.value })} />
+          {!admin.mobile && <p className="mt-1 text-xs text-slate-400">This admin has no mobile on file - one is required for a member account.</p>}
+        </div>
+        <div className="flex justify-end gap-2">
+          <button className="btn-secondary" onClick={onClose}>
+            Cancel
+          </button>
+          <button className="btn-primary" disabled={busy || !form.flatNo || !form.block || !form.mobile} onClick={submit}>
+            {busy && <ButtonSpinner />}
+            Confirm
           </button>
         </div>
       </div>

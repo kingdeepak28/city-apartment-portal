@@ -3,7 +3,7 @@
 import { FormEvent, useState } from "react";
 import { Link } from "react-router-dom";
 import api, { apiErrorMessage } from "../../api/client";
-import { Footer } from "../../components/ui";
+import { ButtonSpinner, Footer } from "../../components/ui";
 
 interface FormData {
   fullName: string;
@@ -198,6 +198,7 @@ export default function Register() {
               </div>
             </div>
             <button className="btn-primary w-full" disabled={busy}>
+              {busy && <ButtonSpinner />}
               Continue
             </button>
           </form>
@@ -234,6 +235,7 @@ export default function Register() {
                 Back
               </button>
               <button className="btn-primary flex-1" disabled={busy}>
+                {busy && <ButtonSpinner />}
                 {busy ? "Submitting..." : "Submit Registration"}
               </button>
             </div>

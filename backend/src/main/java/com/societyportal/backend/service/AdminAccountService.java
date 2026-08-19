@@ -3,8 +3,11 @@
 package com.societyportal.backend.service;
 
 import com.societyportal.backend.domain.AdminUser;
+import com.societyportal.backend.domain.User;
 import com.societyportal.backend.domain.enums.AdminRole;
 import com.societyportal.backend.domain.enums.AdminStatus;
+import com.societyportal.backend.domain.enums.ResidentType;
+import com.societyportal.backend.domain.enums.UserStatus;
 import com.societyportal.backend.dto.AdminAccountDtos;
 import com.societyportal.backend.exception.ApiException;
 import com.societyportal.backend.repository.AdminUserRepository;
@@ -15,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.security.SecureRandom;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -57,7 +61,7 @@ public class AdminAccountService {
                 .build();
         admin = adminUserRepository.save(admin);
         auditService.log("ADMIN_ACCOUNT", "CREATE", admin.getId().toString(), null, req.getRole());
-        emailService.send(admin.getEmail(), "Your City Apartment Portal admin account",
+        emailService.send(admin.getEmail(), "Your City Apartments Portal admin account",
                 "An admin account has been created for you. Temporary password: " + password + ". Please log in and change it immediately.");
         return toSummary(admin);
     }
@@ -84,6 +88,58 @@ public class AdminAccountService {
     public void delete(UUID id) {
         adminUserRepository.deleteById(id);
         auditService.log("ADMIN_ACCOUNT", "DELETE", id.toString(), null, null);
+    }
+
+    /**
+     * The reverse of {@link UserAdminService#promoteToAdmin} - converts an admin-panel account
+     * back into a regular member. Unlike promoting a member (where name/email/mobile are already
+     * enough to build a valid admin row), an {@link AdminUser} has no flat/block/resident-type at
+     * all and its mobile number is optional, while {@link User} requires all three - so this
+     * needs those supplied by the caller rather than being a one-click action.
+     */
+    @Transactional
+    public void demoteToUser(UUID adminId, AdminAccountDtos.DemoteToUserRequest req) {
+        AdminUser admin = adminUserRepository.findById(adminId).orElseThrow(() -> ApiException.notFound("Admin not found"));
+
+        if (admin.getRole() == AdminRole.SUPER_ADMIN && adminUserRepository.countByRole(AdminRole.SUPER_ADMIN) <= 1) {
+            throw ApiException.badRequest("Cannot demote the only remaining Super Admin - promote another account first");
+        }
+
+        String mobile = (req.getMobile() != null && !req.getMobile().isBlank()) ? req.getMobile() : admin.getMobile();
+        if (mobile == null || mobile.isBlank()) {
+            throw ApiException.badRequest("This admin has no mobile number on file - provide one to convert them to a member");
+        }
+
+        // Same reasoning as UserAdminService.promoteToAdmin's identical check, mirrored: must not
+        // leave two accounts sharing an identity across the two tables.
+        if (userRepository.existsByEmailIgnoreCase(admin.getEmail())) {
+            throw ApiException.conflict("A member account with this email already exists");
+        }
+        if (userRepository.existsByMobile(mobile)) {
+            throw ApiException.conflict("A member account with this mobile number already exists");
+        }
+
+        User user = User.builder()
+                .name(admin.getName())
+                .email(admin.getEmail())
+                .mobile(mobile)
+                .passwordHash(admin.getPasswordHash())
+                .flatNo(req.getFlatNo())
+                .block(req.getBlock())
+                .residentType(ResidentType.valueOf(req.getResidentType().toUpperCase()))
+                .status(UserStatus.ACTIVE)
+                .emailVerified(true)
+                .mobileVerified(true)
+                .approvedOn(OffsetDateTime.now())
+                .build();
+        user = userRepository.save(user);
+
+        auditService.log("ADMIN_ACCOUNT", "DEMOTED_TO_USER", adminId.toString(), admin.getRole(), user.getStatus());
+        adminUserRepository.delete(admin);
+
+        emailService.send(user.getEmail(), "Your City Apartments Portal account is now a member account",
+                "Your admin access has been removed. Your account is now a member account for Flat "
+                        + req.getFlatNo() + ", Block " + req.getBlock() + " - log in with your existing password.");
     }
 
     private String generateTempPassword() {

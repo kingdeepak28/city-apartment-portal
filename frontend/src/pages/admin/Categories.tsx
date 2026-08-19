@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import api, { apiErrorMessage } from "../../api/client";
 import { CategoryResponse } from "../../api/types";
-import { Badge, Spinner } from "../../components/ui";
+import { AsyncButton, Badge, Spinner } from "../../components/ui";
 import { useToast } from "../../context/ToastContext";
 
 const TYPES = ["REPORT", "NOTICE", "PHOTO", "MEETING", "TENDER"];
@@ -107,9 +107,9 @@ export default function Categories() {
             ))}
           </select>
         </div>
-        <button className="btn-primary" onClick={create}>
+        <AsyncButton className="btn-primary" onClick={create}>
           + Add
-        </button>
+        </AsyncButton>
       </div>
 
       <div className="card overflow-x-auto">
@@ -143,17 +143,17 @@ export default function Categories() {
                   </td>
                   <td className="p-3">
                     <div className="flex justify-end gap-1.5">
-                      <button className="btn-secondary btn-sm" onClick={() => toggleActive(c)}>
+                      <AsyncButton className="btn-secondary btn-sm" onClick={() => toggleActive(c)}>
                         {c.active ? "Deactivate" : "Activate"}
-                      </button>
-                      <button
+                      </AsyncButton>
+                      <AsyncButton
                         className="btn-danger btn-sm"
                         disabled={c.documentCount > 0}
                         title={c.documentCount > 0 ? "Reassign documents before deleting" : ""}
                         onClick={() => remove(c.id)}
                       >
                         Delete
-                      </button>
+                      </AsyncButton>
                     </div>
                   </td>
                 </tr>

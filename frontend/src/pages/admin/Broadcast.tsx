@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import api, { apiErrorMessage } from "../../api/client";
+import { ButtonSpinner } from "../../components/ui";
 import { useToast } from "../../context/ToastContext";
 
 export default function Broadcast() {
@@ -85,6 +86,7 @@ export default function Broadcast() {
         </div>
         <div className="flex justify-end">
           <button className="btn-primary" disabled={busy || !form.title || !form.message} onClick={send}>
+            {busy && <ButtonSpinner />}
             Send Broadcast
           </button>
         </div>

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import api from "../../api/client";
 import { Page } from "../../api/types";
-import { formatDateTime, Pagination, Spinner } from "../../components/ui";
+import { AsyncButton, formatDateTime, Pagination, Spinner } from "../../components/ui";
 
 interface AuditItem {
   id: string;
@@ -47,9 +47,9 @@ export default function AuditLog() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold">Audit Log</h1>
-        <button className="btn-secondary" onClick={exportExcel}>
+        <AsyncButton className="btn-secondary" onClick={exportExcel}>
           Export Excel
-        </button>
+        </AsyncButton>
       </div>
       <div className="card flex gap-3 p-4">
         <input className="input max-w-xs" placeholder="Filter by module (e.g. REPORT, NOTICE, APPROVAL)" value={module} onChange={(e) => setModule(e.target.value)} />

@@ -3,6 +3,7 @@
 package com.societyportal.backend.repository;
 
 import com.societyportal.backend.domain.AdminUser;
+import com.societyportal.backend.domain.enums.AdminRole;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;
@@ -17,4 +18,6 @@ public interface AdminUserRepository extends JpaRepository<AdminUser, UUID> {
     boolean existsByEmailIgnoreCase(String email);
 
     boolean existsByMobile(String mobile);
+
+    long countByRole(AdminRole role);
 }

@@ -30,7 +30,7 @@ export default function MemberLayout() {
     <div className="min-h-screen bg-slate-50">
       <header className="border-b border-slate-200 bg-white">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
-          <div className="text-lg font-bold text-brand-700">City Apartment Portal</div>
+          <div className="text-lg font-bold text-brand-700">City Apartments Portal</div>
           <nav className="hidden gap-1 md:flex">
             {navItems.map((item) => (
               <NavLink

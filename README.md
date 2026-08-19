@@ -1,4 +1,4 @@
-# City Apartment Portal
+# City Apartments Portal
 
 A full-stack implementation of the Society Document Portal functional spec:
 **Spring Boot 3 (Java 17) + PostgreSQL** backend, **React 18 + TypeScript + Tailwind** frontend.
