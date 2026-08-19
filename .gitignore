@@ -1,0 +1,12 @@
+# Created by run.sh - downloaded local toolchain and runtime state (PIDs, logs, local Postgres
+# data). Neither should ever be committed; both are machine-local and fully reproducible.
+.toolchain/
+.run/
+
+# Created by deploy/backup.sh
+backups/
+
+# Real secrets for docker-compose.prod.yml - never commit, copy from deploy/.env.prod.example
+.env
+
+.DS_Store
