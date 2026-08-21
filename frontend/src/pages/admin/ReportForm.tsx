@@ -4,8 +4,9 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import api, { apiErrorMessage } from "../../api/client";
 import { CategoryResponse, DocumentDetail } from "../../api/types";
+import AttachmentList from "../../components/AttachmentList";
 import FileDrop from "../../components/FileDrop";
-import { ButtonSpinner, formatBytes, formatDateTime, Spinner } from "../../components/ui";
+import { ButtonSpinner, Spinner } from "../../components/ui";
 import { useToast } from "../../context/ToastContext";
 
 const BLOCKS_PLACEHOLDER = "A, B, C";
@@ -198,14 +199,7 @@ export default function ReportForm() {
         {existing && existing.files.length > 0 && (
           <div>
             <label className="label">Existing Files</label>
-            <ul className="divide-y divide-slate-100 rounded-md border border-slate-200 text-sm">
-              {existing.files.map((f) => (
-                <li key={f.id} className="flex justify-between px-3 py-2">
-                  <span>{f.fileName} (v{f.versionNo})</span>
-                  <span className="text-xs text-slate-400">{formatBytes(f.fileSize)} - {formatDateTime(f.uploadedAt)}</span>
-                </li>
-              ))}
-            </ul>
+            <AttachmentList files={existing.files} showMeta />
           </div>
         )}
 

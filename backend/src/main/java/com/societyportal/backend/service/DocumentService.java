@@ -305,7 +305,17 @@ public class DocumentService {
             List<Predicate> predicates = new ArrayList<>();
             predicates.add(cb.equal(root.get("contentType"), type));
             predicates.add(cb.equal(root.get("deleted"), false));
-            if (categoryId != null) predicates.add(cb.equal(root.get("category").get("id"), categoryId));
+            // A document is filed under EITHER a top-level category OR a sub-category, never both
+            // levels of the same branch at once - so filtering by whichever one the caller picked
+            // has to check both columns, or picking a sub-category (which never appears in
+            // "category") would always come back empty even though its documents are right there.
+            // subCategory must be an explicit LEFT join: Path.get() on a to-one association joins
+            // INNER by default, and most documents have no sub-category at all - an inner join
+            // there would silently drop every one of them from the result before the OR below
+            // even runs, breaking top-level filtering too, not just fixing sub-category filtering.
+            if (categoryId != null) predicates.add(cb.or(
+                    cb.equal(root.get("category").get("id"), categoryId),
+                    cb.equal(root.join("subCategory", JoinType.LEFT).get("id"), categoryId)));
             if (status != null && !status.isBlank()) predicates.add(cb.equal(root.get("status"), DocumentStatus.valueOf(status.toUpperCase())));
             if (from != null) predicates.add(cb.greaterThanOrEqualTo(root.get("createdAt"), from.atStartOfDay().atOffset(ZoneOffset.UTC)));
             if (to != null) predicates.add(cb.lessThan(root.get("createdAt"), to.plusDays(1).atStartOfDay().atOffset(ZoneOffset.UTC)));
@@ -330,7 +340,11 @@ public class DocumentService {
             predicates.add(cb.equal(root.get("status"), DocumentStatus.PUBLISHED));
             predicates.add(cb.equal(root.get("deleted"), false));
             predicates.add(visibilityPredicate(root, cb, user));
-            if (categoryId != null) predicates.add(cb.equal(root.get("category").get("id"), categoryId));
+            // See the matching comment in listForAdmin: subCategory needs an explicit LEFT join
+            // here too, for the same reason.
+            if (categoryId != null) predicates.add(cb.or(
+                    cb.equal(root.get("category").get("id"), categoryId),
+                    cb.equal(root.join("subCategory", JoinType.LEFT).get("id"), categoryId)));
             if (from != null) predicates.add(cb.greaterThanOrEqualTo(root.get("publishedOn"), from.atStartOfDay().atOffset(ZoneOffset.UTC)));
             if (to != null) predicates.add(cb.lessThan(root.get("publishedOn"), to.plusDays(1).atStartOfDay().atOffset(ZoneOffset.UTC)));
             if (keyword != null && !keyword.isBlank()) {

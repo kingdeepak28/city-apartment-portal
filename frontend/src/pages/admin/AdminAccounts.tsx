@@ -124,14 +124,22 @@ export default function AdminAccounts() {
 
 function CreateAdminModal({ onClose, onCreated }: { onClose: () => void; onCreated: () => void }) {
   const { notify } = useToast();
-  const [form, setForm] = useState({ name: "", email: "", mobile: "", role: "ADMIN" });
+  const [form, setForm] = useState({ name: "", email: "", mobile: "", role: "ADMIN", password: "" });
   const [busy, setBusy] = useState(false);
 
   async function submit() {
+    const password = form.password.trim();
+    if (password && password.length < 8) {
+      notify("Password must be at least 8 characters", "error");
+      return;
+    }
     setBusy(true);
     try {
-      await api.post("/admin/admins", form);
-      notify("Admin account created and notified by email", "success");
+      // Omitting the key entirely (rather than sending "") when left blank matches what the
+      // backend treats as "generate one for me" - an explicit empty string would instead fail
+      // its own length check.
+      await api.post("/admin/admins", { ...form, password: password || undefined });
+      notify(password ? "Admin account created" : "Admin account created and a temporary password was emailed", "success");
       onCreated();
     } catch (err) {
       notify(apiErrorMessage(err), "error");
@@ -162,6 +170,22 @@ function CreateAdminModal({ onClose, onCreated }: { onClose: () => void; onCreat
             <option value="ADMIN">Admin (Committee)</option>
             <option value="UPLOADER">Content Uploader</option>
           </select>
+        </div>
+        <div>
+          <label className="label">Password (optional)</label>
+          <input
+            className="input"
+            type="password"
+            minLength={8}
+            placeholder="Leave blank to auto-generate one"
+            value={form.password}
+            onChange={(e) => setForm({ ...form, password: e.target.value })}
+          />
+          <p className="mt-1 text-xs text-slate-400">
+            {form.password
+              ? "Sent to no one - share it with them yourself."
+              : "A temporary password will be generated and emailed to them."}
+          </p>
         </div>
         <div className="flex justify-end gap-2">
           <button className="btn-secondary" onClick={onClose}>

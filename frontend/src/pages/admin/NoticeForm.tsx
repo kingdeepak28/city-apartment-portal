@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import api, { apiErrorMessage } from "../../api/client";
 import { CategoryResponse, DocumentDetail } from "../../api/types";
+import AttachmentList from "../../components/AttachmentList";
 import FileDrop from "../../components/FileDrop";
 import RichTextEditor from "../../components/RichTextEditor";
 import { ButtonSpinner, Spinner } from "../../components/ui";
@@ -33,6 +34,7 @@ export default function NoticeForm() {
   const { notify } = useToast();
 
   const [categories, setCategories] = useState<CategoryResponse[]>([]);
+  const [existing, setExisting] = useState<DocumentDetail | null>(null);
   const [loading, setLoading] = useState(isEdit);
   const [busy, setBusy] = useState(false);
   const [files, setFiles] = useState<File[]>([]);
@@ -59,6 +61,7 @@ export default function NoticeForm() {
     if (!isEdit) return;
     api.get<DocumentDetail>(`/admin/notices/${id}`).then((r) => {
       const d = r.data;
+      setExisting(d);
       setForm({
         title: d.title,
         categoryId: d.categoryId || "",
@@ -195,6 +198,13 @@ export default function NoticeForm() {
           <label className="label">Attachments</label>
           <FileDrop files={files} onChange={setFiles} />
         </div>
+
+        {existing && existing.files.length > 0 && (
+          <div>
+            <label className="label">Existing Files</label>
+            <AttachmentList files={existing.files} showMeta />
+          </div>
+        )}
 
         <div className="flex justify-end gap-2 border-t border-slate-100 pt-4">
           <button className="btn-secondary" onClick={() => navigate("/admin/notices")}>

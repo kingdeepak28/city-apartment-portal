@@ -83,8 +83,8 @@ detect_platform() {
   uname_s="$(uname -s)"
   uname_m="$(uname -m)"
   case "$uname_s" in
-    Darwin) OS="darwin" ;;
-    Linux)  OS="linux" ;;
+    Darwin) OS="darwin"; JDK_OS="mac" ;;
+    Linux)  OS="linux"; JDK_OS="linux" ;;
     *) die "Unsupported OS: $uname_s. Install Docker instead (see README) - it works everywhere this script's native fallback doesn't (e.g. Windows outside WSL)." ;;
   esac
   case "$uname_m" in
@@ -116,9 +116,11 @@ ensure_jdk() {
   fi
   local dir="$TOOLCHAIN_DIR/jdk"
   if [ ! -d "$dir" ]; then
-    log "Downloading JDK $JDK_VERSION (Temurin, $OS/$JDK_ARCH)..."
+    # Adoptium's binary API names macOS "mac", not "darwin" (unlike the Node/Postgres downloads
+    # below, which both do use "darwin") - using $OS here 404s on every Mac.
+    log "Downloading JDK $JDK_VERSION (Temurin, $JDK_OS/$JDK_ARCH)..."
     mkdir -p "$dir"
-    curl -fL -o /tmp/jdk.tar.gz "https://api.adoptium.net/v3/binary/latest/$JDK_VERSION/ga/$OS/$JDK_ARCH/jdk/hotspot/normal/eclipse"
+    curl -fL -o /tmp/jdk.tar.gz "https://api.adoptium.net/v3/binary/latest/$JDK_VERSION/ga/$JDK_OS/$JDK_ARCH/jdk/hotspot/normal/eclipse"
     tar xzf /tmp/jdk.tar.gz -C "$dir" --strip-components=1
     rm -f /tmp/jdk.tar.gz
   fi
@@ -192,17 +194,19 @@ start_postgres() {
   if [ ! -d "$pgdata" ]; then
     log "Initializing local PostgreSQL data directory..."
     "$PG_BIN_DIR/initdb" -D "$pgdata" -U society_admin --auth=trust >"$RUN_DIR/pg-initdb.log" 2>&1
+    # The embedded Postgres distribution downloaded above ships only the server itself
+    # (postgres/initdb/pg_ctl) - no psql or createdb client binaries - so the app's database has
+    # to be created through the server's own single-user mode instead, and only here, before the
+    # postmaster below ever starts and claims the data directory's lock (single-user mode needs
+    # exclusive access to it).
+    log "Creating society_portal database..."
+    echo "CREATE DATABASE society_portal;" | "$PG_BIN_DIR/postgres" --single -D "$pgdata" postgres >"$RUN_DIR/pg-createdb.log" 2>&1
   fi
   if "$PG_BIN_DIR/pg_ctl" -D "$pgdata" status >/dev/null 2>&1; then
     log "PostgreSQL already running"
   else
     log "Starting PostgreSQL on port 5432..."
     "$PG_BIN_DIR/pg_ctl" -D "$pgdata" -l "$RUN_DIR/postgres.log" -o "-k $sock -p 5432" start
-  fi
-  # Create the app database/role on first run (initdb's default superuser is society_admin, but
-  # the app's own database still needs creating).
-  if ! "$PG_BIN_DIR/psql" -h "$sock" -p 5432 -U society_admin -lqt 2>/dev/null | cut -d '|' -f1 | grep -qw society_portal; then
-    "$PG_BIN_DIR/createdb" -h "$sock" -p 5432 -U society_admin society_portal 2>/dev/null || true
   fi
 }
 
