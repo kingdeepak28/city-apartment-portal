@@ -10,6 +10,11 @@ export default function Reports() {
   const [categories, setCategories] = useState<CategoryResponse[]>([]);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [categoryId, setCategoryId] = useState("");
+  // Which category's results panel is open in the mobile accordion (see render below). Kept
+  // separate from categoryId (which defaults to "" = All, so desktop shows every report on
+  // load) - on mobile nothing should be expanded until the member actually taps a category, "All
+  // Reports" included, so this starts at null rather than mirroring categoryId's default.
+  const [mobileOpen, setMobileOpen] = useState<string | null>(null);
   const [keyword, setKeyword] = useState("");
   const [sortBy, setSortBy] = useState("publishedOn");
   const [page, setPage] = useState(0);
@@ -37,6 +42,14 @@ export default function Reports() {
   function selectCategory(id: string) {
     setCategoryId(id);
     setPage(0);
+  }
+
+  // Shared onClick for every category row (desktop pills and mobile accordion headers alike):
+  // selects the category as before, and on mobile also opens its panel - tapping an already-open
+  // one closes it again.
+  function handleCategoryClick(id: string) {
+    selectCategory(id);
+    setMobileOpen((prev) => (prev === id ? null : id));
   }
 
   function toggleExpanded(id: string) {
@@ -109,9 +122,9 @@ export default function Reports() {
             <CategoryRow
               label={`All Reports (${categories.reduce((a, c) => a + c.documentCount, 0)})`}
               selected={!categoryId}
-              onClick={() => selectCategory("")}
+              onClick={() => handleCategoryClick("")}
             />
-            {!categoryId && mobileResults}
+            {mobileOpen === "" && mobileResults}
           </div>
           {topLevelCategories.map((parent) => {
             const children = childrenByParent.get(parent.id) || [];
@@ -133,11 +146,11 @@ export default function Reports() {
                   <CategoryRow
                     label={`${parent.name} (${parent.documentCount})`}
                     selected={categoryId === parent.id}
-                    onClick={() => selectCategory(parent.id)}
+                    onClick={() => handleCategoryClick(parent.id)}
                     className="flex-1"
                   />
                 </div>
-                {categoryId === parent.id && <div className="ml-6">{mobileResults}</div>}
+                {mobileOpen === parent.id && <div className="ml-6">{mobileResults}</div>}
                 {children.length > 0 && isExpanded && (
                   <div className="ml-6 space-y-0.5 border-l border-slate-200 pl-2">
                     {children.map((child) => (
@@ -145,9 +158,9 @@ export default function Reports() {
                         <CategoryRow
                           label={`${child.name} (${child.documentCount})`}
                           selected={categoryId === child.id}
-                          onClick={() => selectCategory(child.id)}
+                          onClick={() => handleCategoryClick(child.id)}
                         />
-                        {categoryId === child.id && mobileResults}
+                        {mobileOpen === child.id && mobileResults}
                       </div>
                     ))}
                   </div>
